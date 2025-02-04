@@ -1,4 +1,5 @@
-﻿using MazeGen.maze;
+﻿using MazeGen.Algorithms;
+using MazeGen.maze;
 using MazeGen.maze.draw;
 
 class Program{
@@ -7,6 +8,9 @@ class Program{
 
         int cellSize = 50;
         int wallThickness = 3;
+
+        Backtracking backtracking = new Backtracking();
+        maze = backtracking.GenerateMaze(maze);
 
         MazeDraw mazeDraw = new MazeDraw(maze, cellSize, wallThickness);
         mazeDraw.Draw();
