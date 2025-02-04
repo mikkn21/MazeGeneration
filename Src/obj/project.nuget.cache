@@ -1,8 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "q1ReskcKUBY=",
+  "dgSpecHash": "tV92+cH1RAM=",
   "success": true,
   "projectFilePath": "/Users/me/Documents/Programming/cSharp/MazeGenerator/Src/Src.csproj",
-  "expectedPackageFiles": [],
+  "expectedPackageFiles": [
+    "/Users/me/.nuget/packages/raylib-cs/7.0.1/raylib-cs.7.0.1.nupkg.sha512"
+  ],
   "logs": []
 }

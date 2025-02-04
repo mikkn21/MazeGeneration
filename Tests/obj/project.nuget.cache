@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "Tfea+z6Xr9Q=",
+  "dgSpecHash": "n5TU5n+neiw=",
   "success": true,
   "projectFilePath": "/Users/me/Documents/Programming/cSharp/MazeGenerator/Tests/Tests.csproj",
   "expectedPackageFiles": [
@@ -10,6 +10,7 @@
     "/Users/me/.nuget/packages/microsoft.testplatform.objectmodel/17.12.0/microsoft.testplatform.objectmodel.17.12.0.nupkg.sha512",
     "/Users/me/.nuget/packages/microsoft.testplatform.testhost/17.12.0/microsoft.testplatform.testhost.17.12.0.nupkg.sha512",
     "/Users/me/.nuget/packages/newtonsoft.json/13.0.1/newtonsoft.json.13.0.1.nupkg.sha512",
+    "/Users/me/.nuget/packages/raylib-cs/7.0.1/raylib-cs.7.0.1.nupkg.sha512",
     "/Users/me/.nuget/packages/system.reflection.metadata/1.6.0/system.reflection.metadata.1.6.0.nupkg.sha512",
     "/Users/me/.nuget/packages/xunit/2.9.2/xunit.2.9.2.nupkg.sha512",
     "/Users/me/.nuget/packages/xunit.abstractions/2.0.3/xunit.abstractions.2.0.3.nupkg.sha512",
