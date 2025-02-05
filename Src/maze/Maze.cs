@@ -32,15 +32,17 @@ namespace MazeGen.maze {
             }
         }
 
-        // Visists a cell 
+        // Mark a cell as visisted 
         // Returns true if the cell has not been visited before
         // Returns false if the cell has already been visited before 
-        public Boolean VisitCell(int x, int y) {
-            if (HasVisited(x,y)) {
-                return false;
+        public void MarkCell(int x, int y) {
+            if (!HasVisited(x,y)) {
+                cells[x, y] |= Wall.visited;
             }
-            cells[x,y] |= Wall.visited;
-            return true;
+        }
+
+        public Boolean HasVisited(int x, int y) {
+            return (cells[x,y] & Wall.visited) == Wall.visited;
         }
 
         public void SetWall(int x, int y, Wall wall) {
@@ -51,43 +53,56 @@ namespace MazeGen.maze {
             throw new NotImplementedException();
         }
 
-        public Boolean HasVisited(int x, int y) {
-            Wall cell = cells[x,y]; 
-            return (cell & Wall.visited) == Wall.visited;
-        }
 
+        public List<(Wall, char)> GetNeighbours(int x, int y) {
+            List<(Wall, char)> neighbours = [];
+            // North
+            if (InBounds(x, y-1)) {
+                neighbours.Add((cells[x, y-1], 'N'));
+            }
+            // South
+            if (InBounds(x, y+1)) { 
+                neighbours.Add((cells[x, y+1], 'S'));
+            }
+            // East
+            if (InBounds(x+1, y)) {
+                neighbours.Add((cells[x+1, y], 'E'));
+            }
+            // West 
+            if (InBounds(x-1, y)) {
+                neighbours.Add((cells[x-1, y], 'W'));   
+            }
+            return neighbours;
+        }
 
         public void RemoveWallBetween(int x1, int y1, int x2, int y2) {
             if (!(InBounds(x1, y1) && InBounds(x2, y2))) {
                 throw new ArgumentException("Invalid coordinates");
             }
 
-            Wall cell1 = cells[x1, y1];
-            Wall cell2 = cells[x2, y2];
-            
-            // Check if cell2 is north of cell1
-            if (x1 == x2  && y1 == y2 + 1) {
-                cell1 &= ~Wall.North;
-                cell2 &= ~Wall.South;
+            // Check if (x2, y2) is North of (x1, y1)
+            if (x1 == x2 && y2 == y1 - 1) { 
+                cells[x1, y1] &= ~Wall.North;
+                cells[x2, y2] &= ~Wall.South;
             }
-            // check if cell2 is east of cell1 
-            else if (x1 == x2 + 1 && y1 == y2) {
-                cell1 &= ~Wall.East;
-                cell2 &= ~Wall.West;
+            // Check if (x2, y2) is South of (x1, y1)
+            else if (x1 == x2 && y2 == y1 + 1) {
+                cells[x1, y1] &= ~Wall.South;
+                cells[x2, y2] &= ~Wall.North;
             }
-            // check if cell2 is south of cell1 
-            else if (x1 == x2 && y1 == y2 - 1) {
-                cell1 &= ~Wall.South;
-                cell2 &= ~Wall.North;
+            // Check if (x2, y2) is East of (x1, y1)
+            else if (y1 == y2 && x2 == x1 + 1) {
+                Console.WriteLine("##### Removing East wall");
+                cells[x1, y1] &= ~Wall.East;
+                cells[x2, y2] &= ~Wall.West;
             }
-            // check if cell2 is west of cell1
-            else if (x1 == x2 - 1 && y1 == y2) {
-                cell1 &= ~Wall.West;
-                cell2 &= ~Wall.East;
+            // Check if (x2, y2) is West of (x1, y1)
+            else if (y1 == y2 && x2 == x1 - 1) {
+                cells[x1, y1] &= ~Wall.West;
+                cells[x2, y2] &= ~Wall.East;
+            } else {
+                throw new ArgumentException("Cells are not adjacent");
             }
-
-            cells[x1, y1] = cell1;
-            cells[x2, y2] = cell2;
 
         }
 
