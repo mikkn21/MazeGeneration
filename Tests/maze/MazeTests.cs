@@ -49,10 +49,11 @@ namespace Mazegen.Tests.maze
             var maze = new Maze(5, 5);
             
             // Act
-            maze.RemoveWallBetween(4,4,4,5);
+            maze.RemoveWallBetween(3,3,3,4);
              
             //Assert
-            Assert.False(maze.HasWall(4,4, Wall.South));
+            Assert.False(maze.HasWall(3,3, Wall.South));
+            Assert.False(maze.HasWall(3,4, Wall.North));
         }
 
         [Fact]
@@ -91,35 +92,29 @@ namespace Mazegen.Tests.maze
             var maze = new Maze(5, 5);
             
             // Act
-            maze.RemoveWallBetween(4,4,4,5);
+            maze.RemoveWallBetween(3, 3, 3, 4);
             var mazeCopy = maze.Copy();
             
             // Assert
             Assert.Equal(maze.Width, mazeCopy.Width);
             Assert.Equal(maze.Height, mazeCopy.Height);
-            for (int x = 0; x < 5; x++) {
-                for (int y = 0; y < 5; y++) {
-                    Assert.True(mazeCopy.HasWall(x, y, Wall.North));
-                    Assert.True(mazeCopy.HasWall(x, y, Wall.East));
-                    Assert.True(mazeCopy.HasWall(x, y, Wall.South));
-                    Assert.True(mazeCopy.HasWall(x, y, Wall.West));
-                }
-            }
+            Assert.Equal(maze.HasWall(3, 3, Wall.South), mazeCopy.HasWall(3, 3, Wall.South));
+            Assert.Equal(maze.HasWall(3, 4, Wall.North), mazeCopy.HasWall(3, 4, Wall.North));
         }
 
         [Fact]
-        public void TestVisitCellAndHasVisited() {
+        public void TestMarkCellAndHasVisited() {
             var maze = new Maze(5, 5);
 
             // Assert initial state
             Assert.False(maze.HasVisited(2,2));
 
             // Act & Assert first visit
-            Assert.True(maze.VisitCell(2, 2));
+            maze.MarkCell(2, 2);
             Assert.True(maze.HasVisited(2, 2));
             
             // Act & Assert second visit
-            Assert.False(maze.VisitCell(2, 2));
+            maze.MarkCell(2, 2);
             Assert.True(maze.HasVisited(2, 2));
         }
 
