@@ -4,10 +4,10 @@ using MazeGen.maze.draw;
 
 class Program{
     static void Main(string[] args){
-        Maze maze = new Maze(10, 10);
+        Maze maze = new Maze(3,3);
 
-        int cellSize = 50;
-        int wallThickness = 3;
+        int cellSize = 200;
+        int wallThickness = 2;
 
         Backtracking backtracking = new Backtracking();
         maze = backtracking.GenerateMaze(maze);

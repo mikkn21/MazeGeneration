@@ -44,16 +44,55 @@ namespace Mazegen.Tests.maze
         }
 
         [Fact]
-        public void TestRemoveWall(){
+        public void TestRemoveWallNorth(){
             // Arrange
-            var maze = new Maze(5, 5);
+            Maze maze = new Maze(3, 3);
             
             // Act
-            maze.RemoveWallBetween(3,3,3,4);
+            maze.RemoveWallBetween(1, 1, 1, 0);
              
             //Assert
-            Assert.False(maze.HasWall(3,3, Wall.South));
-            Assert.False(maze.HasWall(3,4, Wall.North));
+            Assert.False(maze.HasWall(1,1, Wall.North));
+            Assert.False(maze.HasWall(1,0, Wall.South));
+        }
+
+        [Fact]
+        public void TestRemoveWallSouth(){
+            // Arrange
+            Maze maze = new Maze(3, 3);
+            
+            // Act
+            maze.RemoveWallBetween(1, 1, 1, 2);
+             
+            //Assert
+            Assert.False(maze.HasWall(1,1, Wall.South));
+            Assert.False(maze.HasWall(1,2, Wall.North));
+        }
+
+        [Fact]
+        public void TestRemoveWallEast(){
+            // Arrange
+            Maze maze = new Maze(3, 3);
+            
+            // Act
+            maze.RemoveWallBetween(1, 1, 2, 1);
+             
+            //Assert
+            Assert.False(maze.HasWall(1,1, Wall.East));
+            Assert.False(maze.HasWall(2,1, Wall.West));
+        }
+
+        [Fact] 
+        public void TestRemoveWallWest(){
+            // Arrange
+            Maze maze = new Maze(3, 3);
+            
+            // Act
+            maze.RemoveWallBetween(1, 1, 0, 1);
+             
+            //Assert
+            Assert.False(maze.HasWall(1,1, Wall.West));
+            Assert.False(maze.HasWall(0,1, Wall.East));
         }
 
         [Fact]
@@ -118,6 +157,35 @@ namespace Mazegen.Tests.maze
             Assert.True(maze.HasVisited(2, 2));
         }
 
+        [Fact]
+        public void TestGetNeighbours() {
+            // Arrange
+            Maze maze = new Maze(5, 5);
+
+            // Act
+            List<(Wall wall, char dir)> neighbours = maze.GetNeighbours(2, 2);
+            
+            // Assert
+            Assert.Equal(4, neighbours.Count);
+            Assert.Contains(neighbours, n => n.dir == 'N' && (n.wall & Wall.North) == Wall.North);
+            Assert.Contains(neighbours, n => n.dir == 'S' && (n.wall & Wall.South) == Wall.South);
+            Assert.Contains(neighbours, n => n.dir == 'E' && (n.wall & Wall.East) == Wall.East);
+            Assert.Contains(neighbours, n => n.dir == 'W' && (n.wall & Wall.West) == Wall.West);
+        }
+
+        [Fact]
+        public void TestGetNeighboursAtBorder() {
+            // Arrange
+            Maze maze = new Maze(5, 5);
+
+            // Act
+            List<(Wall wall, char dir)> neighbours = maze.GetNeighbours(0, 0);
+            
+            // Assert
+            Assert.Equal(2, neighbours.Count);
+            Assert.Contains(neighbours, n => n.dir == 'S' && (n.wall & Wall.South) == Wall.South);
+            Assert.Contains(neighbours, n => n.dir == 'E' && (n.wall & Wall.East) == Wall.East);
+        }
 
 
     } // class MazeTests
