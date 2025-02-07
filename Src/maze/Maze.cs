@@ -92,7 +92,6 @@ namespace MazeGen.maze {
             }
             // Check if (x2, y2) is East of (x1, y1)
             else if (y1 == y2 && x2 == x1 + 1) {
-                Console.WriteLine("##### Removing East wall");
                 cells[x1, y1] &= ~Wall.East;
                 cells[x2, y2] &= ~Wall.West;
             }
