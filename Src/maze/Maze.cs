@@ -1,33 +1,24 @@
+using MazeGen.maze.tile;
+using MazeGen.maze.wall;
+
 namespace MazeGen.maze {
-
-
-    // Bitmasking enum
-    [Flags]
-    public enum Wall : int {
-        None  = 0,
-        North = 1 << 0,  // 1
-        East  = 1 << 1,  // 2
-        South = 1 << 2,  // 4
-        West  = 1 << 3,   // 8
-        visited = 1 << 4 // 16
-    }
 
     public class Maze {
         
         public int Width { get; private set; }
         public int Height { get; private set; }
-        private Wall[,] cells;
+        private Tile[,] tiles;
 
         public Maze(int width, int height) {
 
             Width = width;
             Height = height;
-            cells = new Wall[width, height];
-
+            tiles = new Tile[width, height];
+        
             // init maze with all walls 
             for (int x = 0; x < width; x++) {
                 for (int y = 0; y < height; y++) {
-                    cells[x, y] = Wall.North | Wall.East | Wall.South | Wall.West; 
+                    tiles[x, y] = new Tile(x, y); 
                 }
             }
         }
@@ -35,42 +26,34 @@ namespace MazeGen.maze {
         // Mark a cell as visisted 
         // Returns true if the cell has not been visited before
         // Returns false if the cell has already been visited before 
-        public void MarkCell(int x, int y) {
+        public void MarkTile(int x, int y) {
             if (!HasVisited(x,y)) {
-                cells[x, y] |= Wall.visited;
+                tiles[x, y].Visited = true;
             }
         }
 
         public Boolean HasVisited(int x, int y) {
-            return (cells[x,y] & Wall.visited) == Wall.visited;
-        }
-
-        public void SetWall(int x, int y, Wall wall) {
-            throw new NotImplementedException();
-        }
-
-        public void AddWall(int x, int y, Wall wall) {
-            throw new NotImplementedException();
+            return tiles[x, y].Visited; 
         }
 
 
-        public List<(Wall, char)> GetNeighbours(int x, int y) {
-            List<(Wall, char)> neighbours = [];
+        public List<(Tile, char)> GetNeighbours(int x, int y) {
+            List<(Tile, char)> neighbours = [];
             // North
             if (InBounds(x, y-1)) {
-                neighbours.Add((cells[x, y-1], 'N'));
+                neighbours.Add((tiles[x, y-1], 'N'));
             }
             // South
             if (InBounds(x, y+1)) { 
-                neighbours.Add((cells[x, y+1], 'S'));
+                neighbours.Add((tiles[x, y+1], 'S'));
             }
             // East
             if (InBounds(x+1, y)) {
-                neighbours.Add((cells[x+1, y], 'E'));
+                neighbours.Add((tiles[x+1, y], 'E'));
             }
             // West 
             if (InBounds(x-1, y)) {
-                neighbours.Add((cells[x-1, y], 'W'));   
+                neighbours.Add((tiles[x-1, y], 'W'));   
             }
             return neighbours;
         }
@@ -82,23 +65,23 @@ namespace MazeGen.maze {
 
             // Check if (x2, y2) is North of (x1, y1)
             if (x1 == x2 && y2 == y1 - 1) { 
-                cells[x1, y1] &= ~Wall.North;
-                cells[x2, y2] &= ~Wall.South;
+                tiles[x1, y1].Walls &= ~Wall.North;
+                tiles[x2, y2].Walls  &= ~Wall.South;
             }
             // Check if (x2, y2) is South of (x1, y1)
             else if (x1 == x2 && y2 == y1 + 1) {
-                cells[x1, y1] &= ~Wall.South;
-                cells[x2, y2] &= ~Wall.North;
+                tiles[x1, y1].Walls &= ~Wall.South;
+                tiles[x2, y2].Walls &= ~Wall.North;
             }
             // Check if (x2, y2) is East of (x1, y1)
             else if (y1 == y2 && x2 == x1 + 1) {
-                cells[x1, y1] &= ~Wall.East;
-                cells[x2, y2] &= ~Wall.West;
+                tiles[x1, y1].Walls &= ~Wall.East;
+                tiles[x2, y2].Walls &= ~Wall.West;
             }
             // Check if (x2, y2) is West of (x1, y1)
             else if (y1 == y2 && x2 == x1 - 1) {
-                cells[x1, y1] &= ~Wall.West;
-                cells[x2, y2] &= ~Wall.East;
+                tiles[x1, y1].Walls &= ~Wall.West;
+                tiles[x2, y2].Walls &= ~Wall.East;
             } else {
                 throw new ArgumentException("Cells are not adjacent");
             }
@@ -110,7 +93,7 @@ namespace MazeGen.maze {
             if (!InBounds(x, y)) {
                return true; 
             } 
-            return (cells[x, y] & wall) != 0;
+            return (tiles[x, y].Walls & wall) != 0;
         }
 
 
@@ -120,15 +103,21 @@ namespace MazeGen.maze {
         } 
 
         public Maze Copy(){
-        Maze clone = new Maze(Width, Height);
-        for (int x = 0; x < Width; x++){
-            for (int y = 0; y < Height; y++){
-                clone.cells[x, y] = this.cells[x, y];
-            }
-        }
-        return clone;
-    } 
+            Maze clone = new Maze(Width, Height);
 
+            for (int x = 0; x < Width; x++) {
+                for (int y = 0; y < Height; y++) {
+                    Tile original = this.tiles[x, y];
+                    clone.tiles[x, y] = new Tile(original.X, original.Y) {
+                        Walls = original.Walls,
+                        color = original.color,
+                        Visited = original.Visited
+                    };
+                }
+            }
+
+            return clone;
+        }
 
 
 

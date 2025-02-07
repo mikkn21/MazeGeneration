@@ -1,18 +1,19 @@
 ﻿using MazeGen.Algorithms;
 using MazeGen.maze;
 using MazeGen.maze.draw;
+using MazeGen.maze.step;
 
 class Program{
     static void Main(string[] args){
-        Maze maze = new Maze(3,3);
+        Maze maze = new Maze(5,5);
 
-        int cellSize = 200;
+        int cellSize = 100;
         int wallThickness = 2;
 
         Backtracking backtracking = new Backtracking();
-        maze = backtracking.GenerateMaze(maze);
+        List<MazeStep> mazeSteps = backtracking.GenerateMaze(maze);
 
-        MazeDraw mazeDraw = new MazeDraw(maze, cellSize, wallThickness);
+        MazeDraw mazeDraw = new MazeDraw(maze, mazeSteps, cellSize, wallThickness);
         mazeDraw.Draw();
     }
 
