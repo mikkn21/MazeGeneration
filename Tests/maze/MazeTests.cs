@@ -1,4 +1,6 @@
 using MazeGen.maze;
+using MazeGen.maze.tile;
+using MazeGen.maze.wall;
 using Xunit;
 using Xunit.Sdk;
 
@@ -149,11 +151,11 @@ namespace Mazegen.Tests.maze
             Assert.False(maze.HasVisited(2,2));
 
             // Act & Assert first visit
-            maze.MarkCell(2, 2);
+            maze.MarkTile(2, 2);
             Assert.True(maze.HasVisited(2, 2));
             
             // Act & Assert second visit
-            maze.MarkCell(2, 2);
+            maze.MarkTile(2, 2);
             Assert.True(maze.HasVisited(2, 2));
         }
 
@@ -163,14 +165,14 @@ namespace Mazegen.Tests.maze
             Maze maze = new Maze(5, 5);
 
             // Act
-            List<(Wall wall, char dir)> neighbours = maze.GetNeighbours(2, 2);
+            List<(Tile tiles, char dir)> neighbours = maze.GetNeighbours(2, 2);
             
             // Assert
             Assert.Equal(4, neighbours.Count);
-            Assert.Contains(neighbours, n => n.dir == 'N' && (n.wall & Wall.North) == Wall.North);
-            Assert.Contains(neighbours, n => n.dir == 'S' && (n.wall & Wall.South) == Wall.South);
-            Assert.Contains(neighbours, n => n.dir == 'E' && (n.wall & Wall.East) == Wall.East);
-            Assert.Contains(neighbours, n => n.dir == 'W' && (n.wall & Wall.West) == Wall.West);
+            Assert.Contains(neighbours, n => n.dir == 'N' && (n.tiles.Walls & Wall.North) == Wall.North);
+            Assert.Contains(neighbours, n => n.dir == 'S' && (n.tiles.Walls & Wall.South) == Wall.South);
+            Assert.Contains(neighbours, n => n.dir == 'E' && (n.tiles.Walls & Wall.East) == Wall.East);
+            Assert.Contains(neighbours, n => n.dir == 'W' && (n.tiles.Walls & Wall.West) == Wall.West);
         }
 
         [Fact]
@@ -179,12 +181,39 @@ namespace Mazegen.Tests.maze
             Maze maze = new Maze(5, 5);
 
             // Act
-            List<(Wall wall, char dir)> neighbours = maze.GetNeighbours(0, 0);
+            List<(Tile tiles, char dir)> neighbours = maze.GetNeighbours(0, 0);
             
             // Assert
             Assert.Equal(2, neighbours.Count);
-            Assert.Contains(neighbours, n => n.dir == 'S' && (n.wall & Wall.South) == Wall.South);
-            Assert.Contains(neighbours, n => n.dir == 'E' && (n.wall & Wall.East) == Wall.East);
+            Assert.Contains(neighbours, n => n.dir == 'S' && (n.tiles.Walls & Wall.South) == Wall.South);
+            Assert.Contains(neighbours, n => n.dir == 'E' && (n.tiles.Walls & Wall.East) == Wall.East);
+        }
+
+        [Fact]
+        public void TestCloneWithModifications()
+        {
+            // Arrange
+            var original = new Maze(3, 3);
+            original.MarkTile(1, 1);
+            original.RemoveWallBetween(1, 1, 1, 0);
+
+            // Act
+            var clone = original.Copy();
+            clone.MarkTile(0, 0);  // Modify clone
+            clone.RemoveWallBetween(0, 0, 1, 0);  // Modify clone's walls
+
+            // Assert
+            // Verify original state remains unchanged
+            Assert.True(original.HasVisited(1, 1));
+            Assert.False(original.HasVisited(0, 0));
+            Assert.False(original.HasWall(1, 1, Wall.North));
+            Assert.True(original.HasWall(0, 0, Wall.East));
+
+            // Verify clone has both original and new modifications
+            Assert.True(clone.HasVisited(1, 1));
+            Assert.True(clone.HasVisited(0, 0));
+            Assert.False(clone.HasWall(1, 1, Wall.North));
+            Assert.False(clone.HasWall(0, 0, Wall.East));
         }
 
 
