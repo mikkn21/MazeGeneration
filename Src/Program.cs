@@ -11,9 +11,9 @@ class Program{
         int wallThickness = 2;
 
         Backtracking backtracking = new Backtracking();
-        List<MazeStep> mazeSteps = backtracking.GenerateMaze(maze);
+        Maze newMaze = backtracking.GenerateMaze(maze);
 
-        MazeDraw mazeDraw = new MazeDraw(maze, mazeSteps, cellSize, wallThickness);
+        MazeDraw mazeDraw = new MazeDraw(newMaze, cellSize, wallThickness);
         mazeDraw.Draw();
     }
 
