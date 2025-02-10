@@ -1,4 +1,5 @@
 using MazeGen.maze.step;
+using MazeGen.maze.wall;
 using Raylib_cs;
 using System.Numerics;
 
@@ -6,17 +7,13 @@ namespace MazeGen.maze.draw
 {
     public class MazeDraw {
         private Maze _maze;
-        private readonly List<MazeStep> _steps; // List of recorded steps from the algorithm
-
         private readonly int _cellSize; // Size of each cell in pixels
         private readonly int _wallThickness; // Thickness of the walls in pixels
         
 
-        private int _currentStepIndex = 0;     
 
-        public MazeDraw(Maze maze, List<MazeStep> steps, int cellSize, int wallThickness = 2){
+        public MazeDraw(Maze maze, int cellSize, int wallThickness = 2){
             _maze = maze;
-            _steps = steps;
             _cellSize = cellSize;
             _wallThickness = wallThickness;
         }
@@ -35,10 +32,7 @@ namespace MazeGen.maze.draw
                 Raylib.BeginDrawing();
                 Raylib.ClearBackground(Color.White);
 
-                foreach (MazeStep step in _steps){
-                    ApplyStep(step);
-                    DrawMaze();
-                }
+                DrawMaze();
 
 
                 // draw border                
@@ -52,14 +46,7 @@ namespace MazeGen.maze.draw
             Raylib.CloseWindow();
         }
 
-        private void ApplyStep(MazeStep step){
-            if (step.Action == "visit"){
-                _maze.MarkCell(step.X, step.Y);
-            } else if (step.Action == "removeWall"){
-                _maze.RemoveWallBetween(step.X, step.Y, step.NeighborX, step.NeighborY);
-            }
 
-        }
 
 
         private void DrawMaze(){

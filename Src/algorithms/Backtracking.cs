@@ -1,5 +1,5 @@
 using MazeGen.maze;
-using MazeGen.maze.step;
+using MazeGen.maze.tile;
 using Raylib_cs;
 namespace MazeGen.Algorithms{
     public class Backtracking{
@@ -16,56 +16,32 @@ namespace MazeGen.Algorithms{
             {'S', 1},
             {'W', 0}
         };
-
-        private List<MazeStep> steps = new();
-
     
-        public List<MazeStep> GenerateMaze(Maze maze){
+        public Maze GenerateMaze(Maze maze){
             Maze mazeCopy = maze.Copy();
-            steps.Clear(); 
             BuildMaze(0, 0, mazeCopy);
-            return steps;
+            return mazeCopy;
         }
 
 
         private void BuildMaze(int cx, int cy, Maze maze) {
-            if (maze.HasVisited(cx, cy)) {
-                steps.Add(new MazeStep {
-                    X = cx,
-                    Y = cy,
-                    Action = "visited",
-                    color = Color.Blue,
-                });
+            if (maze.HasVisited(cx, cy)) { 
                 return;
             } 
-            maze.MarkCell(cx, cy);
-            steps.Add(new MazeStep {
-                X = cx,
-                Y = cy,
-                Action = "visit",
-                color = Color.Red,
-            });
+            maze.MarkTile(cx, cy);
 
             // Get unvisited neighbour cells in random order (LINQ)
-            List<(Wall, char)> neighbours = maze.GetNeighbours(cx, cy)
-                .Where( cell => (cell.Item1 & Wall.visited) != Wall.visited)
-                .OrderBy (cell => Guid.NewGuid())
+            List<(Tile tiles, char)> neighbours = maze.GetNeighbours(cx, cy)
+                .Where(tile => !tile.Item1.Visited)
+                .OrderBy(tile => Guid.NewGuid())
                 .ToList();
 
-         
-            foreach ((Wall,char) cell in neighbours) {
-                int nx = cx + DX[cell.Item2];
-                int ny = cy + DY[cell.Item2];
+
+            foreach ((Tile, char) tile in neighbours) {
+                int nx = cx + DX[tile.Item2];
+                int ny = cy + DY[tile.Item2];
                 if (!maze.HasVisited(nx, ny)) { 
-                    maze.RemoveWallBetween(cx, cy, nx, ny);
-                    steps.Add(new MazeStep {
-                        X = cx,
-                        Y = cy,
-                        NeighborX = nx,
-                        NeighborY = ny,
-                        Action = "removeWall",
-                        color = Color.Red,
-                    });
+                    maze.RemoveWallBetween(cx, cy, nx, ny); 
                     BuildMaze(nx, ny, maze);
                 }
             }
