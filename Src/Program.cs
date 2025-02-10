@@ -10,11 +10,12 @@ class Program{
         int cellSize = 100;
         int wallThickness = 2;
 
-        Backtracking backtracking = new Backtracking();
-        Maze newMaze = backtracking.GenerateMaze(maze);
+        Backtracking generator = new Backtracking(maze);
 
-        MazeDraw mazeDraw = new MazeDraw(newMaze, cellSize, wallThickness);
-        mazeDraw.Draw();
+        MazeDraw drawer = new MazeDraw(maze, cellSize, wallThickness);
+
+        drawer.Draw(generator); 
+
     }
 
 

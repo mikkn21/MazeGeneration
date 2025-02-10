@@ -32,9 +32,15 @@ namespace MazeGen.maze {
             }
         }
 
+        public Tile GetTile(int x, int y) {
+            return tiles[x, y];
+        }
+
+            
         public Boolean HasVisited(int x, int y) {
             return tiles[x, y].Visited; 
         }
+
 
 
         public List<(Tile, char)> GetNeighbours(int x, int y) {

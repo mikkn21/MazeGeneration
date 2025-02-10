@@ -1,4 +1,3 @@
-using MazeGen.maze.step;
 using MazeGen.maze.wall;
 using Raylib_cs;
 using System.Numerics;
@@ -7,26 +6,41 @@ namespace MazeGen.maze.draw
 {
     public class MazeDraw {
         private Maze _maze;
+
+        // 60 -> 1 step per second
+        // 30 -> 1 step per 2 seconds
+        // 10 -> 1 step per 6 seconds
+        private int _framesPerStep; 
         private readonly int _cellSize; // Size of each cell in pixels
         private readonly int _wallThickness; // Thickness of the walls in pixels
         
 
 
-        public MazeDraw(Maze maze, int cellSize, int wallThickness = 2){
+        public MazeDraw(Maze maze, int cellSize, int wallThickness = 2, int framesPerStep = 10){
             _maze = maze;
             _cellSize = cellSize;
             _wallThickness = wallThickness;
+            _framesPerStep = framesPerStep;
         }
 
     
-        public void Draw() {
+        public void Draw(IGenerator generator) {
             int screenWidth = _maze.Width * _cellSize;
             int screenHeight = _maze.Height * _cellSize;
             Raylib.InitWindow(screenWidth, screenHeight, "Maze Generator");
             Raylib.SetTargetFPS(60);
 
+            int framesCounter = 0;          
+
             // Main rendering loop
             while (!Raylib.WindowShouldClose()){
+
+                if (!generator.IsComplete && framesCounter >= _framesPerStep){
+                    generator.Step();
+                    framesCounter = 0;
+                }
+
+                framesCounter++;
 
 
                 Raylib.BeginDrawing();
