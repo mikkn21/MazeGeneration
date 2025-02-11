@@ -9,4 +9,4 @@ namespace MazeGen.maze.wall {
         South = 1 << 2,  // 4
         West  = 1 << 3,   // 8
     }   
-} // namespace MazeGen.maze.wall
+}
