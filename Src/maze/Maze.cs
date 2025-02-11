@@ -24,26 +24,27 @@ namespace MazeGen.maze {
         }
 
         // Mark a cell as visisted 
-        // Returns true if the cell has not been visited before
-        // Returns false if the cell has already been visited before 
-        public void MarkTile(int x, int y) {
-            if (!HasVisited(x,y)) {
-                tiles[x, y].Visited = true;
+        public void MarkTile(Tile tile) {
+            if (!HasVisited(tile)) {
+                tile.Visited = true;
             }
         }
 
+        // Check if a cell has been visited
+        public bool HasVisited(Tile tile) {
+            return tile.Visited;
+        }
+
+        // Get the tile at (x, y)
         public Tile GetTile(int x, int y) {
             return tiles[x, y];
         }
 
+        // Get the neighbours of tile 
+        public List<(Tile, char)> GetNeighbours(Tile tile) {
+            int x = tile.X;
+            int y = tile.Y;
             
-        public Boolean HasVisited(int x, int y) {
-            return tiles[x, y].Visited; 
-        }
-
-
-
-        public List<(Tile, char)> GetNeighbours(int x, int y) {
             List<(Tile, char)> neighbours = [];
             // North
             if (InBounds(x, y-1)) {
@@ -63,8 +64,14 @@ namespace MazeGen.maze {
             }
             return neighbours;
         }
+        
+        ///  Remove the wall between two adjacent cells at (x1, y1) and (x2, y2)
+        public void RemoveWallBetween(Tile tile1, Tile tile2) {
+            int x1 = tile1.X;
+            int y1 = tile1.Y;
+            int x2 = tile2.X;
+            int y2 = tile2.Y;
 
-        public void RemoveWallBetween(int x1, int y1, int x2, int y2) {
             if (!(InBounds(x1, y1) && InBounds(x2, y2))) {
                 throw new ArgumentException("Invalid coordinates");
             }
@@ -94,7 +101,7 @@ namespace MazeGen.maze {
 
         }
 
-        //  Quick check for whether a given wall is present
+        /// Check if a wall is present at a given cell (x, y)
         public bool HasWall(int x, int y, Wall wall) {
             if (!InBounds(x, y)) {
                return true; 
@@ -103,11 +110,12 @@ namespace MazeGen.maze {
         }
 
 
-        // bounds check
+        ///  Check if a cell is within the bounds of the maze
         public bool InBounds(int x, int y) {
             return x >= 0 && x < Width && y >= 0 && y < Height;
         } 
 
+        ///  Copy the maze
         public Maze Copy(){
             Maze clone = new Maze(Width, Height);
 
@@ -116,16 +124,15 @@ namespace MazeGen.maze {
                     Tile original = this.tiles[x, y];
                     clone.tiles[x, y] = new Tile(original.X, original.Y) {
                         Walls = original.Walls,
-                        color = original.color,
+                        Color = original.Color,
                         Visited = original.Visited
                     };
                 }
             }
-
             return clone;
         }
 
 
 
-    } // class Maze
-} // namespace MazeGen.maze
+    } 
+} 

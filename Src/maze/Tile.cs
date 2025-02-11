@@ -1,6 +1,4 @@
-using System.Drawing;
 using MazeGen.maze.wall;
-
 namespace MazeGen.maze.tile {
     public class Tile {        
         public int X { get; set; }
@@ -8,7 +6,7 @@ namespace MazeGen.maze.tile {
 
         public Wall Walls { get; set; }
 
-        public Color color { get; set; }
+        public Raylib_cs.Color Color { get; set; }
 
         public bool Visited { get; set; }
 
@@ -16,9 +14,8 @@ namespace MazeGen.maze.tile {
             X = x;
             Y = y;
             Walls = Wall.North | Wall.East | Wall.South | Wall.West;
-            color = Color.Gray;
+            Color = Raylib_cs.Color.Gray;
             Visited = false;
         }
-    } // class Tile
-    
-} // namespace MazeGen.maze.tile
+    }  
+} 
