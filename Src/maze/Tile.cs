@@ -17,5 +17,13 @@ namespace MazeGen.maze.tile {
             Color = Raylib_cs.Color.Gray;
             Visited = false;
         }
+
+        public Tile Copy() {
+            return new Tile(X, Y) {
+                Walls = this.Walls,
+                Color = this.Color,
+                Visited = this.Visited
+            };
+        }
     }  
 } 

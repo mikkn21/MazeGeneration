@@ -74,31 +74,28 @@ namespace MazeGen.maze.draw
         }
 
         private void DrawCell(Tile tile){
-            int x = tile.X;
-            int y = tile.Y;
-
-            int posX = x * _cellSize;
-            int posY = y * _cellSize;
+            int posX = tile.X * _cellSize;
+            int posY = tile.Y * _cellSize;
 
             Raylib.DrawRectangle(posX, posY, _cellSize, _cellSize, tile.Color);
 
             // Draw walls
-            if (_maze.HasWall(x, y, Wall.North)){
+            if (_maze.HasWall(tile, Wall.North)){
                 Vector2 v1 = new Vector2(posX, posY);
                 Vector2 v2 = new Vector2(posX + _cellSize, posY);
                 Raylib.DrawLineEx(v1, v2, _wallThickness, Color.Black);
             }
-            if (_maze.HasWall(x, y, Wall.East)){
+            if (_maze.HasWall(tile, Wall.East)){
                 Vector2 v1 = new Vector2(posX + _cellSize, posY);
                 Vector2 v2 = new Vector2(posX + _cellSize, posY + _cellSize);
                 Raylib.DrawLineEx(v1, v2, _wallThickness, Color.Black);
             }
-            if (_maze.HasWall(x, y, Wall.South)){
+            if (_maze.HasWall(tile, Wall.South)){
                 Vector2 v1 = new Vector2(posX, posY + _cellSize);
                 Vector2 v2 = new Vector2(posX + _cellSize, posY + _cellSize);
                 Raylib.DrawLineEx(v1, v2, _wallThickness, Color.Black);
             }
-            if (_maze.HasWall(x, y, Wall.West)){
+            if (_maze.HasWall(tile, Wall.West)){
                 Vector2 v1 = new Vector2(posX, posY);
                 Vector2 v2 = new Vector2(posX, posY + _cellSize);
                 Raylib.DrawLineEx(v1, v2, _wallThickness, Color.Black);

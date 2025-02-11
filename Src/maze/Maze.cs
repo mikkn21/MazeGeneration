@@ -23,20 +23,23 @@ namespace MazeGen.maze {
             }
         }
 
-        // Mark a cell as visisted 
+        // Mark a tile as visisted 
         public void MarkTile(Tile tile) {
             if (!HasVisited(tile)) {
                 tile.Visited = true;
             }
         }
 
-        // Check if a cell has been visited
+        // Check if a tile has been visited
         public bool HasVisited(Tile tile) {
             return tile.Visited;
         }
 
         // Get the tile at (x, y)
         public Tile GetTile(int x, int y) {
+            if (!InBounds(x, y)) {
+                throw new ArgumentException("Invalid coordinates");
+            }
             return tiles[x, y];
         }
 
@@ -65,16 +68,14 @@ namespace MazeGen.maze {
             return neighbours;
         }
         
-        ///  Remove the wall between two adjacent cells at (x1, y1) and (x2, y2)
+        ///  Remove the wall between two adjacent tiles at (x1, y1) and (x2, y2)
+        /// PRE: Tiles are only accessed with getTile() method  
+        // It is not possible to get a tile outside of the maze bounds
         public void RemoveWallBetween(Tile tile1, Tile tile2) {
             int x1 = tile1.X;
             int y1 = tile1.Y;
             int x2 = tile2.X;
             int y2 = tile2.Y;
-
-            if (!(InBounds(x1, y1) && InBounds(x2, y2))) {
-                throw new ArgumentException("Invalid coordinates");
-            }
 
             // Check if (x2, y2) is North of (x1, y1)
             if (x1 == x2 && y2 == y1 - 1) { 
@@ -101,16 +102,14 @@ namespace MazeGen.maze {
 
         }
 
-        /// Check if a wall is present at a given cell (x, y)
-        public bool HasWall(int x, int y, Wall wall) {
-            if (!InBounds(x, y)) {
-               return true; 
-            } 
-            return (tiles[x, y].Walls & wall) != 0;
+        /// Check if a wall is present at a given tile 
+        /// PRE: Tiles are only accessed with getTile() method
+        /// It is not possible to get a tile outside of the maze bounds 
+        public bool HasWall(Tile tile, Wall wall) {
+            return (tile.Walls & wall) != 0;
         }
 
-
-        ///  Check if a cell is within the bounds of the maze
+        ///  Check if a tile is within the bounds of the maze
         public bool InBounds(int x, int y) {
             return x >= 0 && x < Width && y >= 0 && y < Height;
         } 
@@ -121,12 +120,7 @@ namespace MazeGen.maze {
 
             for (int x = 0; x < Width; x++) {
                 for (int y = 0; y < Height; y++) {
-                    Tile original = this.tiles[x, y];
-                    clone.tiles[x, y] = new Tile(original.X, original.Y) {
-                        Walls = original.Walls,
-                        Color = original.Color,
-                        Visited = original.Visited
-                    };
+                    clone.tiles[x, y] = this.tiles[x, y].Copy();
                 }
             }
             return clone;
