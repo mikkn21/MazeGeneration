@@ -4,7 +4,7 @@ using MazeGen.maze.draw;
 
 class Program{
     static void Main(string[] args){
-        Maze maze = new Maze(30,100);
+        Maze maze = new Maze(50,50);
 
         int cellSize = 10;
         int wallThickness = 3;
