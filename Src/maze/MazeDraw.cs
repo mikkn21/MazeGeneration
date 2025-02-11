@@ -15,8 +15,15 @@ namespace MazeGen.maze.draw
         private int _framesPerStep; 
         private readonly int _cellSize; // Size of each cell in pixels
         private readonly int _wallThickness; // Thickness of the walls in pixels
-        
 
+
+        // Button properties
+        private const int _buttonWidth = 150;
+        private const int _buttonHeight = 40;
+        private const int _buttonMargin = 20;
+        private readonly Color _buttonColor = Color.SkyBlue;
+        private readonly Color _textColor = Color.White;
+        private readonly string _buttonText = "Step";
 
         public MazeDraw(Maze maze, int cellSize, int wallThickness = 3, int framesPerStep = 1){
             _maze = maze;
@@ -28,7 +35,7 @@ namespace MazeGen.maze.draw
     
         public void Draw(IGenerator generator) {
             int screenWidth = _maze.Width * _cellSize;
-            int screenHeight = _maze.Height * _cellSize;
+            int screenHeight = _maze.Height * _cellSize + _buttonHeight + _buttonMargin;
             Raylib.InitWindow(screenWidth, screenHeight, "Maze Generator");
             Raylib.SetTargetFPS(60);
 
@@ -36,6 +43,8 @@ namespace MazeGen.maze.draw
 
             // Main rendering loop
             while (!Raylib.WindowShouldClose()){
+                Vector2 mousePos = Raylib.GetMousePosition();
+
 
                 if (!generator.IsComplete && framesCounter >= _framesPerStep){
                     generator.Step();
@@ -43,6 +52,28 @@ namespace MazeGen.maze.draw
                 }
 
                 framesCounter++;
+
+                Rectangle buttonRect = new Rectangle(
+                        (screenWidth - _buttonWidth) / 2, // Center the button horizontally
+                        screenHeight - _buttonHeight - _buttonMargin, // Position at the bottom
+                        _buttonWidth,
+                        _buttonHeight
+                    );
+
+                Raylib.DrawRectangleRec(buttonRect, _buttonColor);
+                Raylib.DrawText(
+                    _buttonText,
+                    (int)buttonRect.X + 20, // Adjust text position
+                    (int)buttonRect.Y + 10,  // Adjust text position
+                    20, // Font size
+                    _textColor
+                );
+
+                // Check if the button was clicked
+                if (Raylib.CheckCollisionPointRec(mousePos, buttonRect) && Raylib.IsMouseButtonPressed(MouseButton.Left)){
+                    Console.WriteLine("Button clicked");
+                }
+
 
 
                 Raylib.BeginDrawing();
