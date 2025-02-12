@@ -6,6 +6,7 @@ namespace MazeGen.Algorithms {
         private Maze _maze;
         private Stack<Tile> _stack; 
         private Random _rand;
+        private Tile _startTile;
 
         public bool IsComplete { get; private set; }
 
@@ -18,9 +19,9 @@ namespace MazeGen.Algorithms {
             // Start at the top left corner
             int x = _rand.Next(_maze.Width); 
             int y = _rand.Next(_maze.Height);
-            Tile startTile = _maze.GetTile(x, y);
-            _maze.MarkTile(startTile);
-            _stack.Push(startTile);
+            _startTile = _maze.GetTile(x, y);
+            _maze.MarkTile(_startTile);
+            _stack.Push(_startTile);
         }
 
 
@@ -55,5 +56,17 @@ namespace MazeGen.Algorithms {
             }
         }
 
+        public void Reset() {
+        }
+
+        public void Back()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Run()
+        {
+            throw new NotImplementedException();
+        }
     } // class Backtracking
 } // namespace MazeGen.Algorithms

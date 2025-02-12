@@ -1,3 +1,4 @@
+using MazeGen.ui.button;
 using MazeGen.maze.tile;
 using MazeGen.maze.wall;
 using Raylib_cs;
@@ -17,27 +18,39 @@ namespace MazeGen.maze.draw
         private readonly int _wallThickness; // Thickness of the walls in pixels
 
 
+        private Button _backButton;
+        private Button _runResetButton;
+        private Button _stepButton;
+
+        private bool _isRunning = false;
+
+    
+
         // Button properties
         private const int _buttonWidth = 150;
         private const int _buttonHeight = 40;
-        private const int _buttonMargin = 20;
-        private readonly Color _buttonColor = Color.SkyBlue;
-        private readonly Color _textColor = Color.White;
-        private readonly string _buttonText = "Step";
+        private const int _buttonMargin = 10;
 
         public MazeDraw(Maze maze, int cellSize, int wallThickness = 3, int framesPerStep = 1){
             _maze = maze;
             _cellSize = cellSize;
             _wallThickness = wallThickness;
             _framesPerStep = framesPerStep;
+
+            // Initialize "empty" buttons
+            _runResetButton = new Button(new Rectangle(0, 0, 0, 0), "", () => {});
+            _backButton = new Button(new Rectangle(0, 0, 0, 0), "", () => {});
+            _stepButton = new Button(new Rectangle(0, 0, 0, 0), "", () => {});
         }
 
     
         public void Draw(IGenerator generator) {
             int screenWidth = _maze.Width * _cellSize;
-            int screenHeight = _maze.Height * _cellSize + _buttonHeight + _buttonMargin;
+            int screenHeight = _maze.Height * _cellSize + _buttonHeight + (2*_buttonMargin);
             Raylib.InitWindow(screenWidth, screenHeight, "Maze Generator");
             Raylib.SetTargetFPS(60);
+
+            InitButtons(screenHeight, screenWidth, generator);
 
             int framesCounter = 0;          
 
@@ -53,26 +66,14 @@ namespace MazeGen.maze.draw
 
                 framesCounter++;
 
-                Rectangle buttonRect = new Rectangle(
-                        (screenWidth - _buttonWidth) / 2, // Center the button horizontally
-                        screenHeight - _buttonHeight - _buttonMargin, // Position at the bottom
-                        _buttonWidth,
-                        _buttonHeight
-                    );
-
-                Raylib.DrawRectangleRec(buttonRect, _buttonColor);
-                Raylib.DrawText(
-                    _buttonText,
-                    (int)buttonRect.X + 20, // Adjust text position
-                    (int)buttonRect.Y + 10,  // Adjust text position
-                    20, // Font size
-                    _textColor
-                );
-
-                // Check if the button was clicked
-                if (Raylib.CheckCollisionPointRec(mousePos, buttonRect) && Raylib.IsMouseButtonPressed(MouseButton.Left)){
-                    Console.WriteLine("Button clicked");
+                if (generator.IsComplete) {
+                    _runResetButton.Label = "Reset";
+                    _isRunning = false;
                 }
+
+                _backButton.Update(mousePos);
+                _runResetButton.Update(mousePos);
+                _stepButton.Update(mousePos);
 
 
 
@@ -87,6 +88,10 @@ namespace MazeGen.maze.draw
                 Raylib.DrawRectangleLinesEx(rect, _wallThickness, Color.Black);
 
 
+                _backButton.Draw();
+                _runResetButton.Draw();
+                _stepButton.Draw();
+
                 Raylib.EndDrawing();
             }
 
@@ -94,6 +99,50 @@ namespace MazeGen.maze.draw
         }
 
 
+        private void InitButtons(int screenHeight, int screenWidth, IGenerator generator) { 
+             int horizontalCenterPos = (screenWidth - _buttonWidth) / 2;
+
+            _backButton = new Button(
+                new Rectangle(horizontalCenterPos - _buttonWidth - _buttonMargin,
+                              screenHeight - _buttonHeight - _buttonMargin,
+                              _buttonWidth,
+                              _buttonHeight),
+                "Back",
+                () => { Console.WriteLine("Back button clicked"); }
+            );
+
+            _runResetButton = new Button(
+                new Rectangle(horizontalCenterPos,
+                              screenHeight - _buttonHeight - _buttonMargin,
+                              _buttonWidth,
+                              _buttonHeight),
+                "Run", 
+                () => {
+                    if (generator.IsComplete){
+                        Console.WriteLine("Reset button clicked");
+                        _isRunning = false;
+                        _runResetButton.Label = "Run";
+                    }
+                    else {
+                        Console.WriteLine("Run button clicked");
+                        _isRunning = !_isRunning;
+                        _runResetButton.Label = _isRunning ? "Reset" : "Run";
+                    }
+                }
+            );
+
+            _stepButton = new Button(
+                new Rectangle(horizontalCenterPos + _buttonWidth + _buttonMargin,
+                              screenHeight - _buttonHeight - _buttonMargin,
+                              _buttonWidth,
+                              _buttonHeight),
+                "Step",
+                () => {
+                    Console.WriteLine("Step button clicked");
+                    generator.Step();
+                }
+            );
+        }
 
 
         private void DrawMaze(){
