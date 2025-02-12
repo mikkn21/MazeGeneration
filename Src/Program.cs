@@ -4,10 +4,10 @@ using MazeGen.maze.draw;
 
 class Program{
     static void Main(string[] args){
-        Maze maze = new Maze(50,50);
+        Maze maze = new Maze(20,20);
 
-        int cellSize = 10;
-        int wallThickness = 3;
+        int cellSize = 25;
+        int wallThickness = 2;
         int framesPerStep = 1;
 
         Backtracking generator = new Backtracking(maze);
