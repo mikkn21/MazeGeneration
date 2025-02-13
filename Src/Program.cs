@@ -4,9 +4,9 @@ using MazeGen.maze.draw;
 
 class Program{
     static void Main(string[] args){
-        Maze maze = new Maze(20,20);
+        Maze maze = new Maze(10,10);
 
-        int cellSize = 25;
+        int cellSize = 50;
         int wallThickness = 2;
         int framesPerStep = 1;
 
