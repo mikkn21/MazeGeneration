@@ -19,28 +19,22 @@ namespace MazeGen.Algorithms {
             _rand = new Random(_seed);
             IsComplete = false;
 
-            // Start at the top left corner
-            int x = _rand.Next(_maze.Width); 
-            int y = _rand.Next(_maze.Height);
-            _startTile = _maze.GetTile(x, y);
-            _maze.MarkTile(_startTile);
-            _stack.Push(_startTile);
+            _startTile = SelectRandomTile(); 
+            StartAtRandomTile();
         }
-
 
         public void Step(){
             if (_stack.Count > 0) {
                 Tile currentTile = _stack.Peek();
                 currentTile.Color = Raylib_cs.Color.LightGray; 
 
-                // Get a list of unvisited neighbouring cells
+                // Get a list of unvisited neighbouring tiles in random order
                 List<(Tile tile, char)> neighbours = _maze.GetNeighbours(currentTile)
                     .Where(n => !n.Item1.Visited)
                     .OrderBy(n => _rand.Next())
                     .ToList();
 
-
-                // Visit a random neighbour
+                // Visit neighbour
                 if (neighbours.Count > 0) {
                     Tile neighbour = neighbours[0].tile;
 
@@ -64,12 +58,8 @@ namespace MazeGen.Algorithms {
             _maze.ResetMaze();
 
             _rand = new Random(_seed);
-            int x = _rand.Next(_maze.Width);
-            int y = _rand.Next(_maze.Height);
-            _startTile = _maze.GetTile(x, y);
-            
-            _maze.MarkTile(_startTile);
-            _stack.Push(_startTile);
+            _startTile = SelectRandomTile();
+            StartAtRandomTile();
             IsComplete = false;
         }
 
@@ -82,5 +72,19 @@ namespace MazeGen.Algorithms {
         {
             throw new NotImplementedException();
         }
+
+        public void StartAtRandomTile() {
+            _maze.MarkTile(_startTile);
+            _stack.Push(_startTile);
+        }
+
+        private Tile SelectRandomTile(){
+            int x = _rand.Next(_maze.Width);
+            int y = _rand.Next(_maze.Height);
+            return _maze.GetTile(x, y);
+        }
+
+
+
     } // class Backtracking
 } // namespace MazeGen.Algorithms

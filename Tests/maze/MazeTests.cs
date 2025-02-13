@@ -231,6 +231,60 @@ namespace Mazegen.Tests.maze
             Assert.False(clone.HasWall(cloneT3, Wall.South));
         }
 
+        [Fact] 
+        public void TestSetWallBetween() {
+            // Arrange
+            Maze maze = new Maze(3, 3);
+            
+            // Act
+            Tile t1 = maze.GetTile(1, 1);
+            Tile t2 = maze.GetTile(1, 0);
+            maze.RemoveWallBetween(t1, t2);
+         
+            // Assert
+            Assert.False(maze.HasWall(t1, Wall.North));
+            Assert.False(maze.HasWall(t2, Wall.South));
+
+            // Act
+            maze.SetWallBetween(t1, t2);
+
+            // Assert 
+            Assert.True(maze.HasWall(t1, Wall.North));
+            Assert.True(maze.HasWall(t2, Wall.South));
+        }
+
+        [Fact]
+        public void TestResetMaze() {
+            // Arrange
+            Maze maze = new Maze(3, 3);
+            Tile t1 = maze.GetTile(1, 1);
+            Tile t2 = maze.GetTile(1, 0);
+            maze.RemoveWallBetween(t1, t2);
+            maze.MarkTile(t1);
+
+            // Act
+            maze.ResetMaze();
+
+            // Assert
+            Assert.True(maze.HasWall(t1, Wall.North));
+            Assert.True(maze.HasWall(t2, Wall.South));
+            Assert.False(maze.HasVisited(t1));
+        }
+
+        [Fact]
+        public void TestUnmarkTile() {
+            // Arrange
+            Maze maze = new Maze(3, 3);
+            Tile t = maze.GetTile(1, 1);
+            maze.MarkTile(t);
+
+            // Act
+            maze.UnmarkTile(t);
+
+            // Assert
+            Assert.False(maze.HasVisited(t));
+        }
+
 
     } // class MazeTests
 } // namespace Mazegen.Tests.maze

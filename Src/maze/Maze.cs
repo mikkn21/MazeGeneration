@@ -30,6 +30,13 @@ namespace MazeGen.maze {
             }
         }
 
+        // Unmark a tile as visited
+        public void UnmarkTile(Tile tile) {
+            if (HasVisited(tile)) {
+                tile.Visited = false;
+            }
+        }
+
         // Check if a tile has been visited
         public bool HasVisited(Tile tile) {
             return tile.Visited;
@@ -100,6 +107,36 @@ namespace MazeGen.maze {
                 throw new ArgumentException("Cells are not adjacent");
             }
 
+        }
+
+        public void SetWallBetween(Tile tile1, Tile tile2) {
+            int x1 = tile1.X;
+            int y1 = tile1.Y;
+            int x2 = tile2.X;
+            int y2 = tile2.Y;
+
+            // Check if (x2, y2) is North of (x1, y1)
+            if (x1 == x2 && y2 == y1 - 1) { 
+                tiles[x1, y1].Walls |= ~Wall.North;
+                tiles[x2, y2].Walls  |= ~Wall.South;
+            }
+            // Check if (x2, y2) is South of (x1, y1)
+            else if (x1 == x2 && y2 == y1 + 1) {
+                tiles[x1, y1].Walls |= ~Wall.South;
+                tiles[x2, y2].Walls |= ~Wall.North;
+            }
+            // Check if (x2, y2) is East of (x1, y1)
+            else if (y1 == y2 && x2 == x1 + 1) {
+                tiles[x1, y1].Walls |= ~Wall.East;
+                tiles[x2, y2].Walls |= ~Wall.West;
+            }
+            // Check if (x2, y2) is West of (x1, y1)
+            else if (y1 == y2 && x2 == x1 - 1) {
+                tiles[x1, y1].Walls |= ~Wall.West;
+                tiles[x2, y2].Walls |= ~Wall.East;
+            } else {
+                throw new ArgumentException("Cells are not adjacent");
+            }
         }
 
         /// Check if a wall is present at a given tile 
