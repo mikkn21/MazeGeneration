@@ -21,9 +21,7 @@ namespace MazeGen.maze.draw
         private Button _backButton;
         private Button _runResetButton;
         private Button _stepButton;
-
-        private bool _isRunning = false;
-
+        private int _framesCounter = 0;
     
 
         // Button properties
@@ -52,23 +50,20 @@ namespace MazeGen.maze.draw
 
             InitButtons(screenHeight, screenWidth, generator);
 
-            int framesCounter = 0;          
-
             // Main rendering loop
             while (!Raylib.WindowShouldClose()){
                 Vector2 mousePos = Raylib.GetMousePosition();
 
 
-                if (!generator.IsComplete && framesCounter >= _framesPerStep){
+                if (!generator.IsComplete && _framesCounter >= _framesPerStep){
                     generator.Step();
-                    framesCounter = 0;
+                    _framesCounter = 0;
                 }
 
-                framesCounter++;
+                _framesCounter++;
 
                 if (generator.IsComplete) {
                     _runResetButton.Label = "Reset";
-                    _isRunning = false;
                 }
 
                 _backButton.Update(mousePos);
@@ -108,7 +103,10 @@ namespace MazeGen.maze.draw
                               _buttonWidth,
                               _buttonHeight),
                 "Back",
-                () => { Console.WriteLine("Back button clicked"); }
+                () => { 
+                    Console.WriteLine("Back button clicked"); 
+                    generator.Back();
+                    }
             );
 
             _runResetButton = new Button(
@@ -120,13 +118,15 @@ namespace MazeGen.maze.draw
                 () => {
                     if (generator.IsComplete){
                         Console.WriteLine("Reset button clicked");
-                        _isRunning = false;
                         _runResetButton.Label = "Run";
+                        generator.Reset();
+                        _framesCounter = 0;
+                        generator.Step();
                     }
                     else {
                         Console.WriteLine("Run button clicked");
-                        _isRunning = !_isRunning;
-                        _runResetButton.Label = _isRunning ? "Reset" : "Run";
+                        _runResetButton.Label = "Run";
+                        generator.Run();
                     }
                 }
             );

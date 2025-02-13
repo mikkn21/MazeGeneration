@@ -126,6 +126,17 @@ namespace MazeGen.maze {
             return clone;
         }
 
+        // Reset the maze
+        public void ResetMaze() {
+            for (int x = 0; x < Width; x++) {
+                for (int y = 0; y < Height; y++) {
+                    tiles[x, y].Walls = Wall.North | Wall.East | Wall.South | Wall.West;
+                    tiles[x, y].Visited = false;
+                    tiles[x, y].Color = Raylib_cs.Color.Gray;
+                }
+            }
+        }
+
 
 
     } 

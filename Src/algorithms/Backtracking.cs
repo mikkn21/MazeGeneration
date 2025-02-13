@@ -8,12 +8,15 @@ namespace MazeGen.Algorithms {
         private Random _rand;
         private Tile _startTile;
 
+        private int _seed;
+
         public bool IsComplete { get; private set; }
 
         public Backtracking(Maze maze){
             _maze = maze;
             _stack = new Stack<Tile>();
-            _rand = new Random();
+            _seed = Environment.TickCount;
+            _rand = new Random(_seed);
             IsComplete = false;
 
             // Start at the top left corner
@@ -57,6 +60,17 @@ namespace MazeGen.Algorithms {
         }
 
         public void Reset() {
+            _stack.Clear();
+            _maze.ResetMaze();
+
+            _rand = new Random(_seed);
+            int x = _rand.Next(_maze.Width);
+            int y = _rand.Next(_maze.Height);
+            _startTile = _maze.GetTile(x, y);
+            
+            _maze.MarkTile(_startTile);
+            _stack.Push(_startTile);
+            IsComplete = false;
         }
 
         public void Back()
