@@ -11,6 +11,8 @@ namespace MazeGen.ui.button {
         public Color ButtonColor { get; set; }
         public Color TextColor { get; set; }
         public int FontSize { get; set; }
+
+        public bool IsEnabled { get; set; } = true;
         public Action OnClick { get; set; }
 
 
@@ -69,6 +71,11 @@ namespace MazeGen.ui.button {
         }
 
         public void Update(Vector2 mousePos) {
+            if (!IsEnabled) {
+                TextColor = Color.Gray; 
+                return;
+            }
+            
             if (Raylib.CheckCollisionPointRec(mousePos, Rect)) {
                 TextColor = Color.Yellow;
                 if (Raylib.IsMouseButtonPressed(MouseButton.Left)) {
