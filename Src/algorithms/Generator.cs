@@ -5,7 +5,6 @@ public interface IGenerator {
 
     void Back(); 
 
-    void Run();
 
     bool IsComplete { get; }
 }

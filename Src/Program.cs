@@ -12,9 +12,9 @@ class Program{
 
         Backtracking generator = new Backtracking(maze);
 
-        MazeDraw drawer = new MazeDraw(maze, cellSize, wallThickness, framesPerStep);
+        MazeDraw drawer = new MazeDraw(maze, cellSize, generator, wallThickness, framesPerStep);
 
-        drawer.Draw(generator); 
+        drawer.Draw(); 
 
     }
 

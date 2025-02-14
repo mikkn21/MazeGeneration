@@ -1,3 +1,4 @@
+using MazeGen.Algorithms.actionrecord;
 using MazeGen.maze;
 using MazeGen.maze.tile;
 namespace MazeGen.Algorithms {
@@ -5,6 +6,8 @@ namespace MazeGen.Algorithms {
 
         private Maze _maze;
         private Stack<Tile> _stack; 
+        private Stack<ActionRecord> _history;
+
         private Random _rand;
         private Tile _startTile;
 
@@ -15,6 +18,7 @@ namespace MazeGen.Algorithms {
         public Backtracking(Maze maze){
             _maze = maze;
             _stack = new Stack<Tile>();
+            _history = new Stack<ActionRecord>();
             _seed = Environment.TickCount;
             _rand = new Random(_seed);
             IsComplete = false;
@@ -68,10 +72,6 @@ namespace MazeGen.Algorithms {
             throw new NotImplementedException();
         }
 
-        public void Run()
-        {
-            throw new NotImplementedException();
-        }
 
         public void StartAtRandomTile() {
             _maze.MarkTile(_startTile);

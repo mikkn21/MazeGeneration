@@ -13,57 +13,59 @@ namespace MazeGen.maze.draw
         // _framesPerStep = 30  -> 2 steps per second (moderate)
         // _framesPerStep = 60  -> 1 step per second (slow)
         // _framesPerStep = 120 -> 0.5 steps per second (very slow)
-        private int _framesPerStep; 
+        private int _framesPerStep;
+        private int _framesCounter = 0;
         private readonly int _cellSize; // Size of each cell in pixels
         private readonly int _wallThickness; // Thickness of the walls in pixels
+        private readonly int _screenWidth; 
+        private readonly int _screenHeight;
+        private IGenerator _generator; // TODO: Make array later
 
+        private bool _isRunning = false;
 
         private Button _backButton;
         private Button _runResetButton;
         private Button _stepButton;
-        private int _framesCounter = 0;
     
-
         // Button properties
         private const int _buttonWidth = 150;
         private const int _buttonHeight = 40;
         private const int _buttonMargin = 10;
 
-        public MazeDraw(Maze maze, int cellSize, int wallThickness = 3, int framesPerStep = 1){
+        // TODO: Make generator an array later  
+        public MazeDraw(Maze maze, int cellSize, IGenerator generator, int wallThickness = 3, int framesPerStep = 1){
             _maze = maze;
             _cellSize = cellSize;
             _wallThickness = wallThickness;
             _framesPerStep = framesPerStep;
+            _generator = generator;
 
-            // Initialize "empty" buttons
-            _runResetButton = new Button(new Rectangle(0, 0, 0, 0), "", () => {});
-            _backButton = new Button(new Rectangle(0, 0, 0, 0), "", () => {});
-            _stepButton = new Button(new Rectangle(0, 0, 0, 0), "", () => {});
+            _screenWidth = _maze.Width * _cellSize;
+            _screenHeight = _maze.Height * _cellSize + _buttonHeight + (2*_buttonMargin);
+            (_backButton, _runResetButton, _stepButton) = InitButtons();
+
         }
 
     
-        public void Draw(IGenerator generator) {
-            int screenWidth = _maze.Width * _cellSize;
-            int screenHeight = _maze.Height * _cellSize + _buttonHeight + (2*_buttonMargin);
-            Raylib.InitWindow(screenWidth, screenHeight, "Maze Generator");
+        public void Draw() {
+            Raylib.InitWindow(_screenWidth, _screenHeight, "Maze Generator");
             Raylib.SetTargetFPS(60);
 
-            InitButtons(screenHeight, screenWidth, generator);
 
             // Main rendering loop
             while (!Raylib.WindowShouldClose()){
                 Vector2 mousePos = Raylib.GetMousePosition();
 
 
-                if (!generator.IsComplete && _framesCounter >= _framesPerStep){
-                    generator.Step();
+                if (!_generator.IsComplete && _isRunning && _framesCounter >= _framesPerStep){
+                    _generator.Step();
                     _framesCounter = 0;
                 }
-
                 _framesCounter++;
 
-                if (generator.IsComplete) {
+                if (_generator.IsComplete) {
                     _runResetButton.Label = "Reset";
+                    _runResetButton.IsEnabled = true;
                 }
 
                 _backButton.Update(mousePos);
@@ -79,7 +81,7 @@ namespace MazeGen.maze.draw
 
 
                 // draw border                
-                Rectangle rect = new Rectangle(0, 0, screenWidth, screenHeight);
+                Rectangle rect = new Rectangle(0, 0, _screenWidth, _screenHeight);
                 Raylib.DrawRectangleLinesEx(rect, _wallThickness, Color.Black);
 
 
@@ -94,54 +96,55 @@ namespace MazeGen.maze.draw
         }
 
 
-        private void InitButtons(int screenHeight, int screenWidth, IGenerator generator) { 
-             int horizontalCenterPos = (screenWidth - _buttonWidth) / 2;
+        private (Button back, Button runReset, Button step) InitButtons() { 
+             int horizontalCenterPos = (_screenWidth - _buttonWidth) / 2;
 
-            _backButton = new Button(
+            Button back = new Button(
                 new Rectangle(horizontalCenterPos - _buttonWidth - _buttonMargin,
-                              screenHeight - _buttonHeight - _buttonMargin,
+                              _screenHeight - _buttonHeight - _buttonMargin,
                               _buttonWidth,
                               _buttonHeight),
                 "Back",
                 () => { 
                     Console.WriteLine("Back button clicked"); 
-                    generator.Back();
+                    _generator.Back();
                     }
             );
 
-            _runResetButton = new Button(
+            Button runReset = new Button(
                 new Rectangle(horizontalCenterPos,
-                              screenHeight - _buttonHeight - _buttonMargin,
+                              _screenHeight - _buttonHeight - _buttonMargin,
                               _buttonWidth,
                               _buttonHeight),
                 "Run", 
                 () => {
-                    if (generator.IsComplete){
-                        Console.WriteLine("Reset button clicked");
+                    if (_generator.IsComplete){
                         _runResetButton.Label = "Run";
-                        generator.Reset();
+                        _generator.Reset();
                         _framesCounter = 0;
-                        generator.Step();
+                        _isRunning = false;
+                        _runResetButton.IsEnabled = true;
                     }
                     else {
-                        Console.WriteLine("Run button clicked");
                         _runResetButton.Label = "Run";
-                        generator.Run();
+                        _isRunning = true;
+                        _runResetButton.IsEnabled = false;
                     }
                 }
             );
 
-            _stepButton = new Button(
+            Button step = new Button(
                 new Rectangle(horizontalCenterPos + _buttonWidth + _buttonMargin,
-                              screenHeight - _buttonHeight - _buttonMargin,
+                              _screenHeight - _buttonHeight - _buttonMargin,
                               _buttonWidth,
                               _buttonHeight),
                 "Step",
                 () => {
-                    Console.WriteLine("Step button clicked");
-                    generator.Step();
+                    _generator.Step();
                 }
             );
+
+            return (back, runReset, step);
         }
 
 
