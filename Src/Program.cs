@@ -7,7 +7,7 @@ class Program{
         Maze maze = new Maze(10,10);
 
         int cellSize = 50;
-        int wallThickness = 2;
+        int wallThickness = 5;
         int framesPerStep = 1;
 
         Backtracking generator = new Backtracking(maze);

@@ -146,20 +146,30 @@ namespace Mazegen.Tests.maze
         }
 
         [Fact]
-        public void TestMarkCellAndHasVisited() {
-            var maze = new Maze(5, 5);
+        public void TestMarkTile() {
 
-            // Assert initial state
+            // Arrange
+            Maze maze = new Maze(5, 5);
             Tile t = maze.GetTile(2, 2);
-            Assert.False(maze.HasVisited(t));
+
+            // Act & Assert initial state
+            Assert.True(t.State.Equals(TileState.Unvisited));
+            Assert.True(t.Color.Equals(Raylib_cs.Color.Gray));
 
             // Act & Assert first visit
             maze.MarkTile(t);
-            Assert.True(maze.HasVisited(t));
+            Assert.True(t.State.Equals(TileState.Visited));
+            Assert.True(t.Color.Equals(Raylib_cs.Color.LightGray));
             
             // Act & Assert second visit
             maze.MarkTile(t);
-            Assert.True(maze.HasVisited(t));
+            Assert.True(t.Color.Equals(Raylib_cs.Color.White));
+            Assert.True(t.State.Equals(TileState.Selected));
+
+            // Act & Assert third visit 
+            maze.MarkTile(t);
+            Assert.True(t.Color.Equals(Raylib_cs.Color.White));
+            Assert.True(t.State.Equals(TileState.Selected));
         }
 
         [Fact]
@@ -197,7 +207,7 @@ namespace Mazegen.Tests.maze
         [Fact]
         public void TestCloneWithModifications() {
             // Arrange
-            var original = new Maze(3, 3);
+            Maze original = new Maze(3, 3);
             Tile ogT1 = original.GetTile(1, 1);
             Tile ogT2 = original.GetTile(1, 0);
             Tile ogT3 = original.GetTile(0, 0);
@@ -206,7 +216,7 @@ namespace Mazegen.Tests.maze
             original.RemoveWallBetween(ogT1, ogT2);
 
             // Act
-            var clone = original.Copy();
+            Maze clone = original.Copy();
             Tile cloneT1 = clone.GetTile(1, 1);
             Tile cloneT2 = clone.GetTile(1, 0);
             Tile cloneT3 = clone.GetTile(0, 0);
@@ -215,18 +225,17 @@ namespace Mazegen.Tests.maze
             clone.RemoveWallBetween(cloneT3, cloneT4); 
 
             // Assert
-
             Assert.NotSame(original.GetTile(1, 1), clone.GetTile(1, 1));
 
             // Verify original state remains unchanged
-            Assert.True(original.HasVisited(ogT1));
-            Assert.False(original.HasVisited(ogT3));
+            Assert.True(ogT1.State.Equals(TileState.Visited));
+            Assert.False(ogT3.State.Equals(TileState.Visited));
             Assert.False(original.HasWall(ogT1, Wall.North));
             Assert.True(original.HasWall(ogT3, Wall.South));
 
             // Verify clone has both original and new modifications
-            Assert.True(clone.HasVisited(cloneT1));
-            Assert.True(clone.HasVisited(cloneT3));
+            Assert.True(cloneT1.State.Equals(TileState.Visited));
+            Assert.True(cloneT3.State.Equals(TileState.Visited));
             Assert.False(clone.HasWall(cloneT1, Wall.North));
             Assert.False(clone.HasWall(cloneT3, Wall.South));
         }
@@ -259,8 +268,8 @@ namespace Mazegen.Tests.maze
             Maze maze = new Maze(3, 3);
             Tile t1 = maze.GetTile(1, 1);
             Tile t2 = maze.GetTile(1, 0);
-            maze.RemoveWallBetween(t1, t2);
             maze.MarkTile(t1);
+            maze.RemoveWallBetween(t1, t2);
 
             // Act
             maze.ResetMaze();
@@ -268,21 +277,35 @@ namespace Mazegen.Tests.maze
             // Assert
             Assert.True(maze.HasWall(t1, Wall.North));
             Assert.True(maze.HasWall(t2, Wall.South));
-            Assert.False(maze.HasVisited(t1));
+            Assert.False(t1.State.Equals(TileState.Visited));
         }
 
         [Fact]
         public void TestUnmarkTile() {
             // Arrange
             Maze maze = new Maze(3, 3);
-            Tile t = maze.GetTile(1, 1);
+            Tile t = maze.GetTile(2, 2);
+            maze.MarkTile(t);
             maze.MarkTile(t);
 
-            // Act
-            maze.UnmarkTile(t);
+            // Assert initial state
+            Assert.True(t.State.Equals(TileState.Selected));
+            Assert.True(t.Color.Equals(Raylib_cs.Color.White));            
 
-            // Assert
-            Assert.False(maze.HasVisited(t));
+            // Act & Assert first unvisit
+            maze.UnmarkTile(t);
+            Assert.True(t.State.Equals(TileState.Visited));
+            Assert.True(t.Color.Equals(Raylib_cs.Color.LightGray));
+            
+            // Act & Assert second visit
+            maze.UnmarkTile(t);
+            Assert.True(t.Color.Equals(Raylib_cs.Color.Gray));
+            Assert.True(t.State.Equals(TileState.Unvisited));
+
+            // Act & Assert third visit 
+            maze.UnmarkTile(t);
+            Assert.True(t.Color.Equals(Raylib_cs.Color.Gray));
+            Assert.True(t.State.Equals(TileState.Unvisited));
         }
 
 

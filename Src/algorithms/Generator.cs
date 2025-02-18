@@ -1,10 +1,14 @@
+using MazeGen.Algorithms.actionrecord;
+
 public interface IGenerator {
     void Step();
 
-    void Reset(); 
+    void Restart(); 
 
     void Back(); 
 
 
     bool IsComplete { get; }
+
+    bool CanUndo { get; }
 }
