@@ -15,19 +15,15 @@ namespace MazeGen.Algorithms.actionrecord {
         // For forward moves:
         public Tile? FromTile { get; }
         public Tile? ToTile { get; }
-        public Wall? RemovedWallFrom { get; }
-        public Wall? RemovedWallTo { get; }
         
         // For backtracking moves:
         public Tile? PoppedTile { get; }
 
         // Constructor for a forward move:
-        public ActionRecord(Tile fromTile, Tile toTile, Wall removedWallFrom, Wall removedWallTo) {
+        public ActionRecord(Tile fromTile, Tile toTile) {
             ActionType = MazeActionType.Forward;
             FromTile = fromTile;
             ToTile = toTile;
-            RemovedWallFrom = removedWallFrom;
-            RemovedWallTo = removedWallTo;
         }
     
         // Constructor for a backtracking move:
@@ -36,6 +32,13 @@ namespace MazeGen.Algorithms.actionrecord {
             PoppedTile = poppedTile;
         }
 
+        public override string ToString() {
+            if (ActionType == MazeActionType.Forward) {
+                return $"ActionRecord: Forward from {FromTile} to {ToTile}";
+            }
+            else {
+                return $"ActionRecord: Backtrack from {PoppedTile}";
+            }
+        }
     }
-
 } 

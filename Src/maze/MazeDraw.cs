@@ -24,7 +24,7 @@ namespace MazeGen.maze.draw
         private bool _isRunning = false;
 
         private Button _backButton;
-        private Button _runResetButton;
+        private Button _runStopRestartButton;
         private Button _stepButton;
     
         // Button properties
@@ -42,7 +42,7 @@ namespace MazeGen.maze.draw
 
             _screenWidth = _maze.Width * _cellSize;
             _screenHeight = _maze.Height * _cellSize + _buttonHeight + (2*_buttonMargin);
-            (_backButton, _runResetButton, _stepButton) = InitButtons();
+            (_backButton, _runStopRestartButton, _stepButton) = InitButtons();
 
         }
 
@@ -64,14 +64,25 @@ namespace MazeGen.maze.draw
                 _framesCounter++;
 
                 if (_generator.IsComplete) {
-                    _runResetButton.Label = "Reset";
-                    _runResetButton.IsEnabled = true;
+                    _runStopRestartButton.Label = "Restart";
+                    _stepButton.IsEnabled = false;
+                }
+                else {
+                    _stepButton.IsEnabled = true;
                 }
 
-                _backButton.Update(mousePos);
-                _runResetButton.Update(mousePos);
-                _stepButton.Update(mousePos);
+                if (_isRunning && !_generator.IsComplete){
+                    // If the "run" button is pressed, disable the other buttons
+                    _stepButton.IsEnabled = false;
+                    _backButton.IsEnabled = false;
+                } else {
+                    _backButton.IsEnabled = _generator.CanUndo;
+                }
 
+
+                _backButton.Update(mousePos);
+                _runStopRestartButton.Update(mousePos);
+                _stepButton.Update(mousePos);
 
 
                 Raylib.BeginDrawing();
@@ -86,7 +97,7 @@ namespace MazeGen.maze.draw
 
 
                 _backButton.Draw();
-                _runResetButton.Draw();
+                _runStopRestartButton.Draw();
                 _stepButton.Draw();
 
                 Raylib.EndDrawing();
@@ -106,12 +117,16 @@ namespace MazeGen.maze.draw
                               _buttonHeight),
                 "Back",
                 () => { 
-                    Console.WriteLine("Back button clicked"); 
                     _generator.Back();
-                    }
+                    if (_isRunning){ 
+                        _isRunning = false;
+                        _runStopRestartButton.Label = "Run";
+                    }     
+                }
             );
 
-            Button runReset = new Button(
+            // TODO: Add a stop function
+            Button runStopRestart = new Button(
                 new Rectangle(horizontalCenterPos,
                               _screenHeight - _buttonHeight - _buttonMargin,
                               _buttonWidth,
@@ -119,16 +134,20 @@ namespace MazeGen.maze.draw
                 "Run", 
                 () => {
                     if (_generator.IsComplete){
-                        _runResetButton.Label = "Run";
-                        _generator.Reset();
+                        _generator.Restart();
+                        _runStopRestartButton.Label = "Run";
                         _framesCounter = 0;
                         _isRunning = false;
-                        _runResetButton.IsEnabled = true;
+                        _runStopRestartButton.IsEnabled = true;
+                        _stepButton.IsEnabled = true;
+                    }
+                    else if (_isRunning){
+                        _runStopRestartButton.Label = "run";
+                        _isRunning = false;
                     }
                     else {
-                        _runResetButton.Label = "Run";
+                        _runStopRestartButton.Label = "stop";
                         _isRunning = true;
-                        _runResetButton.IsEnabled = false;
                     }
                 }
             );
@@ -139,12 +158,10 @@ namespace MazeGen.maze.draw
                               _buttonWidth,
                               _buttonHeight),
                 "Step",
-                () => {
-                    _generator.Step();
-                }
+                () => { _generator.Step(); }
             );
 
-            return (back, runReset, step);
+            return (back, runStopRestart, step);
         }
 
 

@@ -25,22 +25,28 @@ namespace MazeGen.maze {
 
         // Mark a tile as visisted 
         public void MarkTile(Tile tile) {
-            if (!HasVisited(tile)) {
-                tile.Visited = true;
+            if (tile.State == TileState.Unvisited) {
+                tile.State = TileState.Visited;
+                tile.Color = Raylib_cs.Color.LightGray;
+            }
+            else if (tile.State == TileState.Visited) {
+                tile.State = TileState.Selected;
+                tile.Color = Raylib_cs.Color.White;
             }
         }
 
-        // Unmark a tile as visited
+        // Unmark a tile 
         public void UnmarkTile(Tile tile) {
-            if (HasVisited(tile)) {
-                tile.Visited = false;
+            if (tile.State == TileState.Selected) {
+                tile.State = TileState.Visited;
+                tile.Color = Raylib_cs.Color.LightGray;
+            }
+            else if (tile.State == TileState.Visited) {
+                tile.State = TileState.Unvisited;
+                tile.Color = Raylib_cs.Color.Gray;
             }
         }
 
-        // Check if a tile has been visited
-        public bool HasVisited(Tile tile) {
-            return tile.Visited;
-        }
 
         // Get the tile at (x, y)
         public Tile GetTile(int x, int y) {
@@ -117,23 +123,23 @@ namespace MazeGen.maze {
 
             // Check if (x2, y2) is North of (x1, y1)
             if (x1 == x2 && y2 == y1 - 1) { 
-                tiles[x1, y1].Walls |= ~Wall.North;
-                tiles[x2, y2].Walls  |= ~Wall.South;
+                tiles[x1, y1].Walls |= Wall.North;
+                tiles[x2, y2].Walls  |= Wall.South;
             }
             // Check if (x2, y2) is South of (x1, y1)
             else if (x1 == x2 && y2 == y1 + 1) {
-                tiles[x1, y1].Walls |= ~Wall.South;
-                tiles[x2, y2].Walls |= ~Wall.North;
+                tiles[x1, y1].Walls |= Wall.South;
+                tiles[x2, y2].Walls |= Wall.North;
             }
             // Check if (x2, y2) is East of (x1, y1)
             else if (y1 == y2 && x2 == x1 + 1) {
-                tiles[x1, y1].Walls |= ~Wall.East;
-                tiles[x2, y2].Walls |= ~Wall.West;
+                tiles[x1, y1].Walls |= Wall.East;
+                tiles[x2, y2].Walls |= Wall.West;
             }
             // Check if (x2, y2) is West of (x1, y1)
             else if (y1 == y2 && x2 == x1 - 1) {
-                tiles[x1, y1].Walls |= ~Wall.West;
-                tiles[x2, y2].Walls |= ~Wall.East;
+                tiles[x1, y1].Walls |= Wall.West;
+                tiles[x2, y2].Walls |= Wall.East;
             } else {
                 throw new ArgumentException("Cells are not adjacent");
             }
@@ -168,8 +174,8 @@ namespace MazeGen.maze {
             for (int x = 0; x < Width; x++) {
                 for (int y = 0; y < Height; y++) {
                     tiles[x, y].Walls = Wall.North | Wall.East | Wall.South | Wall.West;
-                    tiles[x, y].Visited = false;
                     tiles[x, y].Color = Raylib_cs.Color.Gray;
+                    tiles[x, y].State = TileState.Unvisited;
                 }
             }
         }
