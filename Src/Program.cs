@@ -1,21 +1,27 @@
 ﻿using MazeGen.Algorithms;
 using MazeGen.maze;
-using MazeGen.maze.draw;
+using MazeGen.ui;
+using MazeGen.ui.app;
 
 class Program{
     static void Main(string[] args){
-        Maze maze = new Maze(10,10);
+        Maze maze1 = new (10,10);
+        Maze maze2 = maze1.Copy();
 
         int cellSize = 50;
         int wallThickness = 5;
         int framesPerStep = 1;
 
-        Backtracking generator = new Backtracking(maze);
+        Backtracking generator1 = new Backtracking(maze1);
+        Backtracking generator2 = new Backtracking(maze2);
 
-        MazeDraw drawer = new MazeDraw(maze, cellSize, generator, wallThickness, framesPerStep);
+        MazeWindow mazeWindow1 = new (maze1, cellSize, generator1, wallThickness, framesPerStep);
+        MazeWindow mazeWindow2 = new (maze2, cellSize, generator2, wallThickness, framesPerStep);
 
-        drawer.Draw(); 
+        MazeWindow[] mazeWindows = [mazeWindow1, mazeWindow2];
 
+        MazeGenApp visualizer = new (mazeWindows);
+        visualizer.Run();
     }
 
 

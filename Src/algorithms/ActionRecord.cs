@@ -1,6 +1,4 @@
 using MazeGen.maze.tile;
-using MazeGen.maze.wall;
-
 
 namespace MazeGen.Algorithms.actionrecord {
     public enum MazeActionType {
