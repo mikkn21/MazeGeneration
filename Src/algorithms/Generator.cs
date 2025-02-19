@@ -1,5 +1,3 @@
-using MazeGen.Algorithms.actionrecord;
-
 public interface IGenerator {
     void Step();
 
