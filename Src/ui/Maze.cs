@@ -4,6 +4,7 @@ using Raylib_cs;
 using System.Numerics;
 using MazeGen.ui.Components;
 using MazeGen.maze;
+using System.Security.Cryptography;
 
 namespace MazeGen.ui
 {
@@ -91,15 +92,16 @@ namespace MazeGen.ui
         private void DrawMaze(){
             for (int x = 0; x < _maze.Width; x++){
                 for (int y = 0; y < _maze.Height; y++){
-                    DrawCell(_maze.GetTile(x, y));
+                    Tile tile = _maze.GetTile(x, y);
+                    bool isCurrentTile = _generator.currentTile == tile;
+                    DrawCell(tile, isCurrentTile);
                 }
             }
         }
 
-        private void DrawCell(Tile tile){
+        private void DrawCell(Tile tile, bool highlight){
             int posX = tile.X * _cellSize;
             int posY = tile.Y * _cellSize;
-
             Raylib.DrawRectangle(posX, posY, _cellSize, _cellSize, tile.Color);
 
             // Draw walls
@@ -123,6 +125,14 @@ namespace MazeGen.ui
                 Vector2 v2 = new Vector2(posX, posY + _cellSize);
                 Raylib.DrawLineEx(v1, v2, _wallThickness, Color.Black);
             }
+
+            if (highlight){
+                int centerX = posX + _cellSize / 2;
+                int centerY = posY + _cellSize / 2;
+                int radius = _cellSize / 4;
+                Raylib.DrawCircle(centerX, centerY, radius, Color.Red); 
+            }
+
         }
 
 

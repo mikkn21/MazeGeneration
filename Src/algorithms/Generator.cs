@@ -1,3 +1,5 @@
+using MazeGen.maze.tile;
+
 public interface IGenerator {
     void Step();
 
@@ -5,6 +7,7 @@ public interface IGenerator {
 
     void Back(); 
 
+    Tile? currentTile { get; }
 
     bool IsComplete { get; }
 
