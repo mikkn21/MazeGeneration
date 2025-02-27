@@ -16,7 +16,6 @@ namespace MazeGen.maze.tile {
 
         public Raylib_cs.Color Color { get; set; }
 
-        // public bool Visited { get; set; }
         public TileState State { get; set; }
 
         public Tile(int x, int y) {
