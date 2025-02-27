@@ -45,7 +45,7 @@ namespace MazeGen.ui
             _control_panel.OnReset += () =>  _framesCounter = 0;
             
             ScreenWidth = _mazeWidth;
-            ScreenHeight = _mazeHeight + _control_panel.ControlPanelHeight;
+            ScreenHeight = (int) (_mazeHeight + _control_panel.ControlPanelHeight);
         }
 
     
@@ -68,8 +68,8 @@ namespace MazeGen.ui
             
             _control_panel.Draw();
 
-
-            Raylib.DrawRectangleV(localMousePos, new Vector2(50,50), Color.Red);
+            // For debugging
+            // Raylib.DrawRectangleV(localMousePos, new Vector2(50,50), Color.Red);
         }
 
 

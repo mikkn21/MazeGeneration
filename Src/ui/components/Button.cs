@@ -6,50 +6,54 @@ namespace MazeGen.ui.Components {
 
     public class Button {
 
-        public Rectangle Rect { get; set; }
-        public string Label { get; set; }
+        public Rectangle Rect { get; private set; }
+
+
+        public string Label {get; set;}
+
+        public int Width {get; private set;}
+        public int Height {get; private set;}
         public Color ButtonColor { get; set; }
         public Color TextColor { get; set; }
-        public int FontSize { get; set; }
-
         public bool IsEnabled { get; set; } = true;
         public Action OnClick { get; set; }
 
+        private int _fontSize {get; set; }
+
+        // Flag to indicate if we need to (re)calculate the button dimensions
+        private bool _needsMeasurement = true; 
+        private const int PADDING = 10; // padding for reactangle
 
         // Fields for click animation
         private int _clickAnimationFrameCounter = 0;
         private const int _clickAnimationDuration = 20; // Number of frames for the animation
         private const float _clickScale = 0.5f; // Scale factor when the button is clicked
 
-        public Button(Rectangle rect, string label, Color buttonColor, Color textColor, int fontSize, Action onClick) {
-            Rect = rect;
-            Label = label;
-            ButtonColor = buttonColor;
-            TextColor = textColor;
-            FontSize = fontSize;
-            OnClick = onClick;
-        }
-        public Button(Rectangle rect, string label, Action onClick) {
-            Rect = rect;
+
+        public Button(int x, int y, int width, int height, string label, int fontSize, Action onClick) {
             Label = label;
             ButtonColor = Color.SkyBlue;
             TextColor = Color.White;
-            FontSize = 20;
+            _fontSize = fontSize;
             OnClick = onClick;
+
+            Width = width;
+            Height = height;
+            Rect = new Rectangle(x, y, Width, Height);
         }
 
-        public void Draw() {
 
+        public void Draw() {
             Rectangle drawRect = Rect;
             if (_clickAnimationFrameCounter > 0) {
                 float t = (float)_clickAnimationFrameCounter / _clickAnimationDuration; 
                 float scale = _clickScale + (1f - _clickScale) * (1f - t);
 
                 // Scale the button around its center
-                float newWidth = Rect.Width * scale;
-                float newHeight = Rect.Height * scale;
-                float offsetX = (Rect.Width - newWidth) / 2;
-                float offsetY = (Rect.Height - newHeight) / 2;
+                float newWidth = Width * scale;
+                float newHeight = Height * scale;
+                float offsetX = (Width - newWidth) / 2;
+                float offsetY = (Height - newHeight) / 2;
                 drawRect = new Rectangle(Rect.X + offsetX, Rect.Y + offsetY, newWidth, newHeight);
             }
 
@@ -57,13 +61,13 @@ namespace MazeGen.ui.Components {
             Raylib.DrawRectangleRec(drawRect, ButtonColor);
 
             // Center the text horizontally and vertically
-            int textWidth = Raylib.MeasureText(Label, FontSize);
+            int textWidth = Raylib.MeasureText(Label, _fontSize);
             int textX = (int)(drawRect.X + (drawRect.Width - textWidth) / 2);
-            int textY = (int)(drawRect.Y + (drawRect.Height - FontSize) / 2);
-            Raylib.DrawText(Label, textX, textY, FontSize, TextColor);
+            int textY = (int)(drawRect.Y + (drawRect.Height - _fontSize) / 2);
+            Raylib.DrawText(Label, textX, textY, _fontSize, TextColor);
 
             // Border around the button
-            Raylib.DrawRectangleLinesEx(Rect, 2, Color.Black);
+            Raylib.DrawRectangleLinesEx(drawRect, 2, Color.Black);
 
             if (_clickAnimationFrameCounter > 0) {
                 _clickAnimationFrameCounter--;

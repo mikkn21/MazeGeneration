@@ -8,8 +8,7 @@ namespace MazeGen.ui.Components {
 
     public class ControlPanel {
 
-
-        public int ControlPanelHeight => BUTTON_HEIGHT + BUTTON_PADDING * 2;
+        public float ControlPanelHeight => _backButton.Rect.Height + ButtonPadding * 2;
 
         public event Action? OnReset;
 
@@ -23,11 +22,8 @@ namespace MazeGen.ui.Components {
 
         private readonly int _mazeWidth;
         private readonly int _mazeHeight;
+        private int ButtonPadding => Math.Clamp((int)(_mazeWidth * 0.04f), 10, 40);
 
-        // Button properties
-        private const int BUTTON_HEIGHT = 40;
-        private const int BUTTON_WIDTH = 150;
-        private const int BUTTON_PADDING = 10;
 
         public ControlPanel(IGenerator generator, int mazeWidth, int mazeHeight) {
             _generator = generator;
@@ -76,39 +72,34 @@ namespace MazeGen.ui.Components {
 
         public bool IsRunning() => _isRunning;
 
-        private (Button back, Button runReset, Button step) InitButtons()
-        {
-            int horizontalCenterPos = (_mazeWidth - BUTTON_WIDTH) / 2;
+        private (Button back, Button runStopRe, Button step) InitButtons() {
+            int panelY = _mazeHeight + ButtonPadding;
+            int fontSize = (int) (_mazeWidth * 0.05f);
+            fontSize = Math.Clamp(fontSize, 12, 40);
 
-            int panelY = _mazeHeight + BUTTON_PADDING;
+            int buttonWidth = (int)(_mazeWidth * 0.2f);  // 20% of maze width
+            int buttonHeight = fontSize + (2 * ButtonPadding);  // Using your PADDING constant
+
+            // Calculate positions
+            float centerX = _mazeWidth / 2;
+            float runStopX = centerX - buttonWidth / 2;
+            float backX = runStopX - buttonWidth - ButtonPadding;
+            float stepX = runStopX + buttonWidth + ButtonPadding;
 
             Button back = new Button(
-                new Rectangle(
-                    horizontalCenterPos - BUTTON_WIDTH - BUTTON_PADDING,
-                    panelY,
-                    BUTTON_WIDTH,
-                    BUTTON_HEIGHT),
-                "Back",
-                () =>
-                {
-                    _generator.Back();
+                (int)backX, panelY, buttonWidth, buttonHeight,
+                "Back", fontSize, () => {
+                     _generator.Back();
                     if (_isRunning) {
                         _isRunning = false;
                         _runStopRestartButton.Label = "Run";
-                    }
-                }
+                    } 
+                 }
             );
 
-            
             Button runStopRestart = new Button(
-                new Rectangle(
-                    horizontalCenterPos,
-                    panelY,
-                    BUTTON_WIDTH,
-                    BUTTON_HEIGHT),
-                "Run",
-                () =>
-                {
+                (int)runStopX, panelY, buttonWidth, buttonHeight,
+                "Run", fontSize, () => {
                     if (_generator.IsComplete) {
                         _generator.Restart();
                         _runStopRestartButton.Label = "Run";
@@ -118,24 +109,26 @@ namespace MazeGen.ui.Components {
                         OnReset?.Invoke();
                     }
                     else if (_isRunning) {
-                        _runStopRestartButton.Label = "run";
+                        _runStopRestartButton.Label = "Run";
                         _isRunning = false;
                     }
                     else {
-                        _runStopRestartButton.Label = "stop";
+                        _runStopRestartButton.Label = "Stop";
                         _isRunning = true;
-                    }
-                }
-            );
+                    } 
 
+                 }
+            );
+                
             Button step = new Button(
-                new Rectangle(
-                    horizontalCenterPos + BUTTON_WIDTH + BUTTON_PADDING,
-                    panelY,
-                    BUTTON_WIDTH,
-                    BUTTON_HEIGHT),
-                "Step",
-                () => { _generator.Step(); }
+                (int)stepX, panelY, buttonWidth, buttonHeight,
+                "Step", fontSize, () => { 
+                    _generator.Step();
+                    if (_isRunning) {
+                        _isRunning = false;
+                        _runStopRestartButton.Label = "Run";
+                    }
+                 }
             );
 
             return (back, runStopRestart, step);
