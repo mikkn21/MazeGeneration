@@ -35,6 +35,9 @@ namespace MazeGen.ui.app {
         private const int BUTTON_HEIGHT = 50;
         private const int MAZE_PADDING = 10;
 
+        private float _instructionScrollY = 0;
+        private float _totalInstructionContentHeight = 0;
+
 
         public MazeGenApp(MazeWindow[] mazeDraws) {
             _mazeWindows = mazeDraws;
@@ -113,26 +116,40 @@ namespace MazeGen.ui.app {
             Raylib.DrawRectangleRec(instructionWindow, transColor);
             Raylib.DrawRectangleLinesEx(instructionWindow, 2, Color.Black);
             
+
+            float wheel = Raylib.GetMouseWheelMove();
+            _instructionScrollY += wheel * 20; // 30 is the scroll speed
+
+            Raylib.BeginScissorMode(
+                (int)instructionWindow.X,
+                (int)instructionWindow.Y,
+                (int)instructionWindow.Width,
+                (int)instructionWindow.Height
+            );
+
+            float currentY = instructionWindow.Y + horizalSpacing + _instructionScrollY;
+            float startY = currentY;
+
             string title = "Instructions";
             int titleFontSize = Math.Clamp((int)(instructionWindow.Width * 0.05f), 20, 70);
             float textSpacing = 2;
             Vector2 titleSize = Raylib.MeasureTextEx(Raylib.GetFontDefault(), title, titleFontSize, textSpacing);
 
             float titleX = instructionWindow.X + (instructionWindow.Width - titleSize.X) / 2;
-            float titleY = instructionWindow.Y + horizalSpacing;
             Raylib.DrawTextEx(
                 Raylib.GetFontDefault(),
                 title,
-                new Vector2(titleX, titleY),
+                new Vector2(titleX, currentY),
                 titleFontSize,
                 textSpacing,
                 Color.White
             );
 
             // underline title 
-            Vector2 startPos = new Vector2(titleX, titleY + titleSize.Y);
-            Vector2 endPos = new Vector2(titleX + titleSize.X, titleY + titleSize.Y);
-
+            Vector2 startPos = new Vector2(titleX, currentY + titleSize.Y);
+            Vector2 endPos = new Vector2(titleX + titleSize.X, currentY + titleSize.Y);
+            Raylib.DrawLineEx(startPos, endPos, 2, Color.Black);
+            
             // Instruction buttons
             (string label, string desc)[] buttonDesc = new(string label, string desc)[] {
                 ("Step", "Performs one step of the maze generation algorithm"),
@@ -154,7 +171,8 @@ namespace MazeGen.ui.app {
             
                 
             
-            float currentY = titleY + titleSize.Y;
+            currentY += titleSize.Y + horizalSpacing;
+
             string buttonSectionTitle = "Buttons:";
             int sectionFontSize = Math.Clamp((int)(titleFontSize * 0.70f), 12, 50);
             Vector2 buttonSectionSize = Raylib.MeasureTextEx(Raylib.GetFontDefault(), buttonSectionTitle, sectionFontSize, textSpacing); 
@@ -169,7 +187,6 @@ namespace MazeGen.ui.app {
 
             );
             currentY += buttonSectionSize.Y + horizalSpacing;
-            Raylib.DrawLineEx(new Vector2(instructionWindow.X, currentY), new Vector2(instructionWindow.X + instructionWindow.Width, currentY), 3, Color.Red);
 
             foreach (var (label, desc) in buttonDesc) {
                 currentY = DrawButtonWithDesc(label, desc, currentY, instructionWindow, verticalSpacing, horizalSpacing, textSpacing, fontSize, ButtonWidth);
@@ -199,6 +216,8 @@ namespace MazeGen.ui.app {
                 currentY = DrawTileWithDesc(color, desc, currentY, instructionWindow, verticalSpacing, horizalSpacing, textSpacing, fontSize, ButtonWidth);
             }
 
+            currentY += horizalSpacing * 3; // Add some padding at the bottom
+
             // Draw close button
             float exitButtonScaleFactor = 0.6f;
             Vector2 buttonTextSize = Raylib.MeasureTextEx(Raylib.GetFontDefault(), "Exit", fontSize * exitButtonScaleFactor, textSpacing);
@@ -206,7 +225,7 @@ namespace MazeGen.ui.app {
             float exitButtonWidth = ButtonWidth * exitButtonScaleFactor; 
             Button exitButton = new Button(
                 instructionWindow.X + instructionWindow.Width - verticalSpacing - exitButtonWidth,
-                instructionWindow.Y + horizalSpacing,
+                instructionWindow.Y + horizalSpacing + _instructionScrollY,
                 exitButtonWidth,
                 exitButtonHeight,
                 "Exit",
@@ -215,6 +234,33 @@ namespace MazeGen.ui.app {
             );
             exitButton.Update(mousePos);
             exitButton.Draw();
+
+            _totalInstructionContentHeight = currentY - startY;
+            Raylib.EndScissorMode();
+
+            float maxScroll = Math.Max(0, _totalInstructionContentHeight - instructionWindow.Height);
+            _instructionScrollY = Math.Clamp(_instructionScrollY, -maxScroll, 0);
+
+            // Draw scrollbar 
+            if (_totalInstructionContentHeight > instructionWindow.Height)
+            {
+                float scrollbarWidth = 8;
+                float visibleRatio = instructionWindow.Height / _totalInstructionContentHeight;
+                float scrollbarHeight = instructionWindow.Height * visibleRatio;
+
+                float scrollProgress = -_instructionScrollY / maxScroll;
+                float scrollbarY = instructionWindow.Y + (instructionWindow.Height - scrollbarHeight) * scrollProgress;
+
+                Rectangle scrollbar = new Rectangle(
+                    instructionWindow.X + instructionWindow.Width - scrollbarWidth - 4,
+                    scrollbarY,
+                    scrollbarWidth,
+                    scrollbarHeight
+                );
+
+                Raylib.DrawRectangleRec(scrollbar, new Color(100, 100, 100, 180));
+            }
+
 
         }
 
