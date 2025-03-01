@@ -30,13 +30,6 @@ namespace MazeGen.ui.app {
         private const int FRAMES_PER_STEP = 4;
         private int _frameCounter = 0;
 
-
-        // Start screen elements 
-        // private Button _startButton;
-        // private Button _instructionButton;
-        // private Button _settingsButton;
-
-        // private Button _exitButton;
         private const int BUTTON_WIDTH = 200;
 
         private const int BUTTON_HEIGHT = 50;
@@ -50,13 +43,6 @@ namespace MazeGen.ui.app {
             _windowWidth = (_mazeWindows[0].ScreenWidth * mazeDraws.Length) + (MAZE_PADDING * (mazeDraws.Length + 1)); // +1 for the outer edges
             _windowHeight = _mazeWindows[0].ScreenHeight + (2 * MAZE_PADDING);
 
-            // (_startButton, _instructionButton ,_settingsButton) = InitializeUI();
-
-            // _exitButton = new Button(
-            //     new Rectangle(0,0 , 90, 30), // Position will be updated in Draw
-            //     "Exit",
-            //     () => _currentScreen = Screen.Start
-            // );
 
             // init background maze
             int dimx = (int)Math.Ceiling((float)_windowWidth / BACKGROUND_CELL_SIZE);
@@ -64,31 +50,6 @@ namespace MazeGen.ui.app {
             _backgroundMaze = new Maze(dimx, dimy);
             _backgroundGenerator = new Backtracking(_backgroundMaze);
         }
-
-        // private (Button start, Button instruction, Button setting) InitializeUI() {
-        //     int centerX = _windowWidth / 2 - BUTTON_WIDTH / 2;
-        //     int centerY = _windowHeight / 2 - BUTTON_HEIGHT / 2;
-
-        //     Button start = new Button(
-        //         new Rectangle (centerX, centerY, BUTTON_WIDTH, BUTTON_HEIGHT),
-        //         "Start",
-        //         () => _currentScreen = Screen.Maze 
-        //     );
-
-        //     Button instructions = new Button( 
-        //         new Rectangle (centerX, centerY + (BUTTON_HEIGHT + 20), BUTTON_WIDTH, BUTTON_HEIGHT),
-        //         "Instructions",
-        //         () => { _currentScreen = Screen.Instruction; }
-        //     );
-
-        //     Button settings = new Button(
-        //         new Rectangle(centerX, centerY + 2 * (BUTTON_HEIGHT + 20), BUTTON_WIDTH, BUTTON_HEIGHT),
-        //         "Settings",
-        //         () => { /* TODO: Implement settings */ }
-        //     );
-
-        //     return (start, instructions, settings);
-        // }
 
         private void InitializeRenderTextures() {
             for (int i = 0; i < _mazeWindows.Length; i++) {
@@ -137,213 +98,199 @@ namespace MazeGen.ui.app {
             float instructionWidth = _windowWidth * 0.9f;
             float instructionHeight = _windowHeight * 0.9f;
 
-            Rectangle instRect = new Rectangle(
-                (_windowWidth - instructionWidth) / 2,  // Center horizontally
-                (_windowHeight - instructionHeight) / 2, // Center vertically
+            Rectangle instructionWindow = new Rectangle(
+                (_windowWidth - instructionWidth) / 2,  
+                (_windowHeight - instructionHeight) / 2, 
                 instructionWidth,
                 instructionHeight
             );
-            string title = "Instructions";
-            int fontsize = 40;
-            int padding = 10;
-            Vector2 titleSize = Raylib.MeasureTextEx(Raylib.GetFontDefault(), title, fontsize, 2);
 
-            // Transparrent window containing the instructions
+            float verticalSpacing = Math.Clamp(instructionWindow.Width * 0.02f, 5, 30); // TODO: Check clamp values
+            float horizalSpacing = Math.Clamp(instructionWindow.Height * 0.02f, 5, 30); // TODO: Check clamp values
+
+            // Transparrent color for the window 
             Color transColor = new Color(200, 200, 200, 240);
-            Raylib.DrawRectangleRec(instRect, transColor);
-            Raylib.DrawRectangleLinesEx(instRect, 2, Color.Black);
+            Raylib.DrawRectangleRec(instructionWindow, transColor);
+            Raylib.DrawRectangleLinesEx(instructionWindow, 2, Color.Black);
             
-            // Draw the title
-            float textX = instRect.X + (instRect.Width - titleSize.X) / 2;
-            float textY = instRect.Y + padding;
-            Raylib.DrawText(
+            string title = "Instructions";
+            int titleFontSize = Math.Clamp((int)(instructionWindow.Width * 0.05f), 20, 70);
+            float textSpacing = 2;
+            Vector2 titleSize = Raylib.MeasureTextEx(Raylib.GetFontDefault(), title, titleFontSize, textSpacing);
+
+            float titleX = instructionWindow.X + (instructionWindow.Width - titleSize.X) / 2;
+            float titleY = instructionWindow.Y + horizalSpacing;
+            Raylib.DrawTextEx(
+                Raylib.GetFontDefault(),
                 title,
-                (int)textX,
-                (int)textY,
-                fontsize,
+                new Vector2(titleX, titleY),
+                titleFontSize,
+                textSpacing,
                 Color.White
             );
 
-
             // underline title 
-            int textWidth = Raylib.MeasureText(title, fontsize); 
-            Vector2 starpos = new Vector2(textX, textY + titleSize.Y);
-            Vector2 endpos = new Vector2(textX + textWidth, textY + titleSize.Y);
-            Raylib.DrawLineEx(starpos, endpos, 3, Color.Black);
+            Vector2 startPos = new Vector2(titleX, titleY + titleSize.Y);
+            Vector2 endPos = new Vector2(titleX + titleSize.X, titleY + titleSize.Y);
+
+            // Instruction buttons
+            (string label, string desc)[] buttonDesc = new(string label, string desc)[] {
+                ("Step", "Performs one step of the maze generation algorithm"),
+                ("Run", "Continuously runs the algorithm until completion or stop"),
+                ("Stop", "Stops the algorithm if it is currently running"),
+                ("Restart", "Restarts the algorithm with a new seed"),
+                ("Back", "Undoes the last step of the algorithm"),
+            };
+
+
+            // Calculate the width of the buttons based on the longest text and the window width
+            float fontSize = Math.Clamp(instructionWindow.Width * 0.03f, 12, 30);
+            float maxTextWidth = buttonDesc.Max(b => Raylib.MeasureTextEx(Raylib.GetFontDefault(), b.label, fontSize, textSpacing).X);
+            float ButtonWidth = maxTextWidth + verticalSpacing;
+
+            float minButtonWidth = instructionWindow.Width * 0.08f;
+            float maxButtonWidth = instructionWindow.Width * 0.30f;
+            ButtonWidth = Math.Min(Math.Max(ButtonWidth, minButtonWidth), maxButtonWidth);
+            
+                
+            
+            float currentY = titleY + titleSize.Y;
+            string buttonSectionTitle = "Buttons:";
+            int sectionFontSize = Math.Clamp((int)(titleFontSize * 0.70f), 12, 50);
+            Vector2 buttonSectionSize = Raylib.MeasureTextEx(Raylib.GetFontDefault(), buttonSectionTitle, sectionFontSize, textSpacing); 
+            
+            Raylib.DrawTextEx(
+                Raylib.GetFontDefault(),
+                buttonSectionTitle,
+                new Vector2(instructionWindow.X + verticalSpacing, currentY),
+                sectionFontSize,
+                textSpacing,
+                Color.Black
+
+            );
+            currentY += buttonSectionSize.Y + horizalSpacing;
+            Raylib.DrawLineEx(new Vector2(instructionWindow.X, currentY), new Vector2(instructionWindow.X + instructionWindow.Width, currentY), 3, Color.Red);
+
+            foreach (var (label, desc) in buttonDesc) {
+                currentY = DrawButtonWithDesc(label, desc, currentY, instructionWindow, verticalSpacing, horizalSpacing, textSpacing, fontSize, ButtonWidth);
+            }
+
+            string tileSectionTitle = "Tiles:";
+            Vector2 tileSectionSize = Raylib.MeasureTextEx(Raylib.GetFontDefault(), tileSectionTitle, sectionFontSize, textSpacing); 
+            
+            Raylib.DrawTextEx(
+                Raylib.GetFontDefault(),
+                tileSectionTitle,
+                new Vector2(instructionWindow.X + verticalSpacing, currentY),
+                sectionFontSize,
+                textSpacing,
+                Color.Black
+            );
+            currentY += tileSectionSize.Y + horizalSpacing;
+            // instruction tiles
+            (Color color, String desc) [] tileDesc = new(Color color, String desc)[] {
+                (Color.Gray, "The algorithm has not visited this tile"),
+                (Color.LightGray, "The algorithm has visited this tile"),
+                (Color.White, "The algorithm has selected this tile for the final maze"),
+                (Color.Red, "The current tile the algorithm is working on")
+            };
+
+            foreach (var (color, desc) in tileDesc) {
+                currentY = DrawTileWithDesc(color, desc, currentY, instructionWindow, verticalSpacing, horizalSpacing, textSpacing, fontSize, ButtonWidth);
+            }
 
             // Draw close button
-            // _exitButton.Rect = new Rectangle(
-            //     instRect.X + instRect.Width - _exitButton.Rect.Width - padding,
-            //     instRect.Y + padding,
-            //     _exitButton.Rect.Width,
-            //     _exitButton.Rect.Height
-            // ); 
-            // _exitButton.Draw();
-            // _exitButton.Update(mousePos);
-
-            // Draw the instructions
-            // Button examples and descriptions
-            float startY = textY + titleSize.Y + padding * 2;
-            int descFontSize = 20;
-            int buttonWidth = 100;
-            int buttonHeight = 30;
-            float buttonX = instRect.X + padding * 2;
-            float textStartX = buttonX + buttonWidth + padding * 2;
-
-            // Step button example
-            // Button stepExample = new Button(
-            //     new Rectangle(buttonX, startY, buttonWidth, buttonHeight),
-            //     "Step",
-            //     () => { }
-            // );
-            // stepExample.Draw();
-            // Raylib.DrawText(
-            //     "Performs one step of the maze generation algorithm",
-            //     (int)textStartX,
-            //     (int)startY + (buttonHeight - descFontSize) / 2,
-            //     descFontSize,
-            //     Color.Black
-            // );
-            // // Run button example
-            // startY += buttonHeight + padding * 2;
-            // Button runExample = new Button(
-            //     new Rectangle(buttonX, startY, buttonWidth, buttonHeight),
-            //     "Run",
-            //     () => { }
-            // );
-            // runExample.Draw();
-            // Raylib.DrawText(
-            //     "Continuously runs the algorithm until completion",
-            //     (int)textStartX,
-            //     (int)startY + (buttonHeight - descFontSize) / 2,
-            //     descFontSize,
-            //     Color.Black
-            // );
-            // // Stop button example
-            // startY += buttonHeight + padding * 2;
-            // Button stopExample = new Button(
-            //     new Rectangle(buttonX, startY, buttonWidth, buttonHeight),
-            //     "stop",
-            //     () => { }
-            // );
-            // stopExample.Draw();
-            // Raylib.DrawText(
-            //     "Stops the algorithm if it is currently running",
-            //     (int)textStartX,
-            //     (int)startY + (buttonHeight - descFontSize) / 2,
-            //     descFontSize,
-            //     Color.Black
-            // );
-            // // Restarts button example
-            // startY += buttonHeight + padding * 2;
-            // Button restartExample = new Button(
-            //     new Rectangle(buttonX, startY, buttonWidth, buttonHeight),
-            //     "restart",
-            //     () => { }
-            // );
-            // restartExample.Draw();
-            // Raylib.DrawText(
-            //     "Restarts the algorithm with a new seed",
-            //     (int)textStartX,
-            //     (int)startY + (buttonHeight - descFontSize) / 2,
-            //     descFontSize,
-            //     Color.Black
-            // );
-            // // Back button example
-            // startY += buttonHeight + padding * 2;
-            // Button backExample = new Button(
-            //     new Rectangle(buttonX, startY, buttonWidth, buttonHeight),
-            //     "Back",
-            //     () => { }
-            // );
-            // backExample.Draw();
-            // Raylib.DrawText(
-            //     "Undoes the last step of the algorithm",
-            //     (int)textStartX,
-            //     (int)startY + (buttonHeight - descFontSize) / 2,
-            //     descFontSize,
-            //     Color.Black
-            // );
-            // // tile unvisited
-            // startY += buttonHeight + padding * 2;
-            // Rectangle unvisitedRect = new Rectangle(
-            //     (int)buttonX,
-            //     (int)startY,
-            //     BACKGROUND_CELL_SIZE,
-            //     BACKGROUND_CELL_SIZE
-            // );
-            // Raylib.DrawRectangleRec(unvisitedRect, Color.Gray);
-            // Raylib.DrawRectangleLinesEx(unvisitedRect, BACKGROUND_WALL_THICKNESS, Color.Black);
-
-            // Raylib.DrawText(
-            //     "The algorithm has not visited this tile",
-            //     (int)textStartX,
-            //     (int)startY + (buttonHeight - descFontSize) / 2,
-            //     descFontSize,
-            //     Color.Black
-            // );
-            // // tile visited
-            // startY += buttonHeight + padding * 2;
-            // Rectangle visitRect = new Rectangle(
-            //     (int)buttonX,
-            //     (int)startY,
-            //     BACKGROUND_CELL_SIZE,
-            //     BACKGROUND_CELL_SIZE
-            // );
-            // Raylib.DrawRectangleRec(visitRect, Color.LightGray);
-            // Raylib.DrawRectangleLinesEx(visitRect, BACKGROUND_WALL_THICKNESS, Color.Black);
-
-            // Raylib.DrawText(
-            //     "The algorithm has visited this tile",
-            //     (int)textStartX,
-            //     (int)startY + (buttonHeight - descFontSize) / 2,
-            //     descFontSize,
-            //     Color.Black
-            // );
-            // // tile selected
-            // startY += buttonHeight + padding * 2;
-            // Rectangle selectedRect = new Rectangle(
-            //     (int)buttonX,
-            //     (int)startY,
-            //     BACKGROUND_CELL_SIZE,
-            //     BACKGROUND_CELL_SIZE
-            // );
-            // Raylib.DrawRectangleRec(selectedRect, Color.White);
-            // Raylib.DrawRectangleLinesEx(selectedRect, BACKGROUND_WALL_THICKNESS, Color.Black);
-
-            // Raylib.DrawText(
-            //     "The algorithm has selected this tile for the final maze",
-            //     (int)textStartX,
-            //     (int)startY + (buttonHeight - descFontSize) / 2,
-            //     descFontSize,
-            //     Color.Black
-            // );
-
-            // tile current tile (circle)
-            startY += buttonHeight + padding * 2;
-            Rectangle currentRect = new Rectangle(
-                (int)buttonX,
-                (int)startY,
-                BACKGROUND_CELL_SIZE,
-                BACKGROUND_CELL_SIZE
+            float exitButtonScaleFactor = 0.6f;
+            Vector2 buttonTextSize = Raylib.MeasureTextEx(Raylib.GetFontDefault(), "Exit", fontSize * exitButtonScaleFactor, textSpacing);
+            float exitButtonHeight = (buttonTextSize.Y + verticalSpacing) * exitButtonScaleFactor;
+            float exitButtonWidth = ButtonWidth * exitButtonScaleFactor; 
+            Button exitButton = new Button(
+                instructionWindow.X + instructionWindow.Width - verticalSpacing - exitButtonWidth,
+                instructionWindow.Y + horizalSpacing,
+                exitButtonWidth,
+                exitButtonHeight,
+                "Exit",
+                fontSize * exitButtonScaleFactor,
+                () => _currentScreen = Screen.Start
             );
-            Raylib.DrawRectangleRec(currentRect, Color.Blank);
-            Raylib.DrawRectangleLinesEx(currentRect, BACKGROUND_WALL_THICKNESS, Color.Black);
-            int centerX = (int)buttonX + BACKGROUND_CELL_SIZE / 2;
-            int centerY = (int)startY + BACKGROUND_CELL_SIZE / 2;
-            int radius = BACKGROUND_CELL_SIZE / 4;
-            Raylib.DrawCircle(centerX, centerY, radius, Color.Red);
-            Raylib.DrawText(
-                "The current tile the algorithm is working on",
-                (int)textStartX,
-                (int)startY + (buttonHeight - descFontSize) / 2,
-                descFontSize,
-                Color.Black
-            ); 
+            exitButton.Update(mousePos);
+            exitButton.Draw();
 
         }
 
+        private float DrawTileWithDesc(Color color, String desc, float currentY, Rectangle window, float vSpace, float hSpace, float textSpacing, float fontSize, float buttonWidth) { 
+            Vector2 descSize= Raylib.MeasureTextEx(Raylib.GetFontDefault(), desc, fontSize, textSpacing);
+            float tileX =  window.X + vSpace;
+            float tileSize = descSize.Y + vSpace;
+
+            float textStartX = tileX + buttonWidth + hSpace;
+            float textStartY = currentY + (tileSize - fontSize) / 2;
+            Rectangle rect = new Rectangle(
+                    tileX,
+                    currentY,
+                    tileSize,
+                    tileSize
+            );
+            if (color.Equals(Color.Red)) {
+                Raylib.DrawRectangleRec(rect, Color.Blank);
+                float centerX = tileX + tileSize / 2;
+                float centerY = currentY + tileSize / 2;
+                float radius = tileSize / 4;
+                Raylib.DrawCircle((int)centerX, (int)centerY, radius, Color.Red);
+            } else {
+                Raylib.DrawRectangleRec(rect, color);
+            }
+
+
+            Raylib.DrawRectangleLinesEx(rect, BACKGROUND_WALL_THICKNESS, Color.Black);
+
+            Raylib.DrawTextEx(
+                Raylib.GetFontDefault(),
+                desc,
+                new Vector2(textStartX, textStartY),
+                fontSize,
+                textSpacing,
+                Color.Black
+            );
+
+            return currentY + tileSize + hSpace;
+        }
+
+        private float DrawButtonWithDesc(string buttonText, string description, float currentY, Rectangle window, float vSpace, float hSpace, float textSpacing, float fontSize, float buttonWidth) {  
+            Vector2 buttonTextSize = Raylib.MeasureTextEx(Raylib.GetFontDefault(), buttonText, fontSize, textSpacing);
+            
+            float buttonHeight = buttonTextSize.Y + vSpace;  // half vspace padding on each side
+            float buttonX = window.X + vSpace;
+            float buttonY = currentY;
+
+            float descStartX = buttonX + buttonWidth + hSpace; 
+            float descStartY = buttonY + (buttonHeight - fontSize) / 2; 
+
+            Button button = new Button(
+                buttonX, buttonY, buttonWidth, buttonHeight,
+                buttonText,
+                fontSize,
+                () => { }
+            );
+            button.Draw();
+
+            Raylib.DrawTextEx(
+                Raylib.GetFontDefault(),
+                description,
+                new Vector2(descStartX, descStartY),
+                fontSize,
+                textSpacing,
+                Color.Black
+            );
+
+            return currentY + buttonHeight + hSpace;
+        }
+
+
+
+
         private void DrawStartScreen(Vector2 mousePos){
+            // Title 
             string title = "Maze Generator";
             int titleFontsize = (int)(_windowWidth * 0.1f); 
             titleFontsize = Math.Clamp(titleFontsize, 15, 140);
@@ -370,6 +317,7 @@ namespace MazeGen.ui.app {
             );
 
 
+            // Menu buttons
             int verticalSpacing = (int)(_windowHeight * 0.05f);
             verticalSpacing = Math.Clamp(verticalSpacing, 20, 100);
             float baseY = titleRect.Y + rectHeight + verticalSpacing;
@@ -390,21 +338,10 @@ namespace MazeGen.ui.app {
                 button.Update(mousePos);
                 button.Draw();
             }
-
-
-
         }
 
 
-        private Button CreateMenuButton(
-            string buttonText,
-            int titleFontsize,
-            int padding,
-            float baseY,
-            int buttonIndex,
-            int verticalSpacing,
-            Action onClick)
-        {
+        private Button CreateMenuButton( string buttonText, int titleFontsize, int padding, float baseY, int buttonIndex, int verticalSpacing, Action onClick) {
             int menuButtonsFont = (int)(titleFontsize * 0.3f);
             menuButtonsFont = Math.Clamp(menuButtonsFont, 12, 40);
 

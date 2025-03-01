@@ -11,18 +11,19 @@ namespace MazeGen.ui.Components {
 
         public string Label {get; set;}
 
-        public int Width {get; private set;}
-        public int Height {get; private set;}
+        public float Width {get; private set;}
+        public float Height {get; private set;}
         public Color ButtonColor { get; set; }
         public Color TextColor { get; set; }
         public bool IsEnabled { get; set; } = true;
         public Action OnClick { get; set; }
 
-        private int _fontSize {get; set; }
+        private float _fontSize {get; set; }
 
         // Flag to indicate if we need to (re)calculate the button dimensions
         private bool _needsMeasurement = true; 
         private const int PADDING = 10; // padding for reactangle
+        private const int TEXTSPACING = 2;
 
         // Fields for click animation
         private int _clickAnimationFrameCounter = 0;
@@ -30,7 +31,7 @@ namespace MazeGen.ui.Components {
         private const float _clickScale = 0.5f; // Scale factor when the button is clicked
 
 
-        public Button(int x, int y, int width, int height, string label, int fontSize, Action onClick) {
+        public Button(float x, float y, float width, float height, string label, float fontSize, Action onClick) {
             Label = label;
             ButtonColor = Color.SkyBlue;
             TextColor = Color.White;
@@ -61,10 +62,17 @@ namespace MazeGen.ui.Components {
             Raylib.DrawRectangleRec(drawRect, ButtonColor);
 
             // Center the text horizontally and vertically
-            int textWidth = Raylib.MeasureText(Label, _fontSize);
-            int textX = (int)(drawRect.X + (drawRect.Width - textWidth) / 2);
-            int textY = (int)(drawRect.Y + (drawRect.Height - _fontSize) / 2);
-            Raylib.DrawText(Label, textX, textY, _fontSize, TextColor);
+            Vector2 textSize = Raylib.MeasureTextEx(Raylib.GetFontDefault(), Label, _fontSize, TEXTSPACING);
+            float textX = drawRect.X + (drawRect.Width - textSize.X) / 2;
+            float textY = drawRect.Y + (drawRect.Height - textSize.Y) / 2;
+            Raylib.DrawTextEx(
+                Raylib.GetFontDefault(),
+                Label,
+                new Vector2(textX, textY),
+                _fontSize,
+                TEXTSPACING,
+                TextColor
+            );
 
             // Border around the button
             Raylib.DrawRectangleLinesEx(drawRect, 2, Color.Black);
