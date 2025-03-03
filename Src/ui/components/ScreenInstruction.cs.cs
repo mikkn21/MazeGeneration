@@ -21,6 +21,9 @@ namespace MazeGen.ui.components {
         private readonly float _fontSize;
         private const int SCROLLSPEED = 20;
 
+        private bool _isDraggingScrollbar = false;
+        private float _scrollbarDragOffset = 0;
+
 
         private readonly (string label, string desc)[] _buttons = new (string label, string desc)[] {
                 ("Step", "Performs one step of the maze generation algorithm"),
@@ -153,7 +156,7 @@ namespace MazeGen.ui.components {
             Raylib.EndScissorMode();
 
             // Draw scrollbar 
-            ScrollBar();
+            ScrollBar(mousePos);
  
 
         }
@@ -260,7 +263,7 @@ namespace MazeGen.ui.components {
             );
         }
 
-        private void ScrollBar() {
+        private void ScrollBar(Vector2 mousePos) {
             float maxScroll = Math.Max(0, _totalInstructionContentHeight - _instructionWindow.Height);
             _instructionScrollY = Math.Clamp(_instructionScrollY, -maxScroll, 0);
 
@@ -279,7 +282,30 @@ namespace MazeGen.ui.components {
                     scrollbarHeight
                 );
 
-                Raylib.DrawRectangleRec(scrollbar, new Color(100, 100, 100, 180));
+                if (Raylib.CheckCollisionPointRec(mousePos, scrollbar) && Raylib.IsMouseButtonPressed(MouseButton.Left)) {
+                    _isDraggingScrollbar = true;
+                    _scrollbarDragOffset = mousePos.Y - scrollbarY;
+                }
+
+                if (_isDraggingScrollbar) {
+                    if (Raylib.IsMouseButtonDown(MouseButton.Left)) {
+                        float newScrollbarY = mousePos.Y - _scrollbarDragOffset;
+                        float newScrollProgress = (newScrollbarY - _instructionWindow.Y) / (_instructionWindow.Height - scrollbarHeight);
+
+                        newScrollProgress = Math.Clamp(newScrollProgress, 0, 1);
+
+                        _instructionScrollY = -newScrollProgress * maxScroll;
+                    } else {
+                        _isDraggingScrollbar = false;
+                    }
+                }
+
+                Color scrollbarColor = _isDraggingScrollbar ? 
+                    new Color(100, 100, 100, 220) : 
+                    new Color(130, 130, 130, 180);
+
+
+                Raylib.DrawRectangleRec(scrollbar, scrollbarColor);
             }
         }
     }
