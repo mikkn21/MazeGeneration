@@ -2,9 +2,8 @@ using MazeGen.maze.tile;
 using MazeGen.maze.wall;
 using Raylib_cs;
 using System.Numerics;
-using MazeGen.ui.Components;
+using MazeGen.ui.components;
 using MazeGen.maze;
-using System.Security.Cryptography;
 
 namespace MazeGen.ui
 {

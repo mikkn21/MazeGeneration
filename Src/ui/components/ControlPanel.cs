@@ -2,7 +2,7 @@
 using System.Numerics;
 using Raylib_cs;
 
-namespace MazeGen.ui.Components {
+namespace MazeGen.ui.components {
 
       
 

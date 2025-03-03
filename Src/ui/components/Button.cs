@@ -2,7 +2,7 @@ using Raylib_cs;
 using System.Numerics;
 
 
-namespace MazeGen.ui.Components {
+namespace MazeGen.ui.components {
 
     public class Button {
 
@@ -19,9 +19,6 @@ namespace MazeGen.ui.Components {
         public Action OnClick { get; set; }
 
         private float _fontSize {get; set; }
-
-        // Flag to indicate if we need to (re)calculate the button dimensions
-        private bool _needsMeasurement = true; 
         private const int PADDING = 10; // padding for reactangle
         private const int TEXTSPACING = 2;
 
