@@ -58,6 +58,8 @@ namespace MazeGen.ui.components {
 
             _fontSize = Math.Clamp(_instructionWindow.Width * 0.03f, 12, 30); // font size for buttons and descriptions
 
+          
+
         }
 
         public void Draw(Vector2 mousePos)  {

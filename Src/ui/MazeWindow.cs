@@ -12,10 +12,6 @@ namespace MazeGen.ui
         public int ScreenHeight { get; private set; }
         public int ScreenWidth { get; private set; }
 
-        private readonly int _mazeHeight;
-        private readonly int _mazeWidth;
-
-        private readonly ControlPanel _control_panel;
         private Maze _maze;
 
         // _framesPerStep = 1   -> 60 steps per second (fastest)
@@ -36,57 +32,30 @@ namespace MazeGen.ui
             _framesPerStep = framesPerStep;
             _generator = generator;
 
-            _mazeWidth = _maze.Width * _cellSize;
-            _mazeHeight = _maze.Height * _cellSize;
-
-            
-            _control_panel = new ControlPanel(generator, _mazeWidth, _mazeHeight ); 
-            _control_panel.OnReset += () =>  _framesCounter = 0;
-            
-            ScreenWidth = _mazeWidth;
-            ScreenHeight = (int) (_mazeHeight + _control_panel.ControlPanelHeight);
+            ScreenWidth = _maze.Width * _cellSize;
+            ScreenHeight = _maze.Height * _cellSize; 
         }
 
-    
-        public void DrawFrame(Vector2 localMousePos) {
-            if (!_generator.IsComplete && _control_panel.IsRunning() && _framesCounter >= _framesPerStep){
+        public void restartMaze() {
+            _generator.Restart();
+        }
+
+        public void DrawFrame() {
+            if (!_generator.IsComplete && _framesCounter >= _framesPerStep){
                 _generator.Step();
                 _framesCounter = 0;
             }
             _framesCounter++;
-
-            _control_panel.Update(localMousePos);
 
             Raylib.ClearBackground(Color.White);
             DrawMaze();
 
 
             // draw border                
-            Rectangle rect = new Rectangle(0, 0, _mazeWidth, _mazeHeight);
+            Rectangle rect = new Rectangle(0, 0, ScreenWidth, ScreenHeight);
             Raylib.DrawRectangleLinesEx(rect, _wallThickness, Color.Black);
-            
-            _control_panel.Draw();
-
-            // For debugging
-            // Raylib.DrawRectangleV(localMousePos, new Vector2(50,50), Color.Red);
         }
 
-
-        // TODO: Figure out if I need this
-        // public void RunStandalone() {
-        //     Raylib.InitWindow(ScreenWidth, ScreenHeight, "Maze Generator");
-        //     Raylib.SetTargetFPS(60);
-
-        //     while (!Raylib.WindowShouldClose()) {
-        //         Raylib.BeginDrawing();
-        //         DrawFrame();
-        //         Raylib.EndDrawing();
-        //     }
-        //     Raylib.CloseWindow();
-        // }
-
-
-       
 
         private void DrawMaze(){
             for (int x = 0; x < _maze.Width; x++){
@@ -133,10 +102,5 @@ namespace MazeGen.ui
             }
 
         }
-
-
-
-
     }
-
 } 

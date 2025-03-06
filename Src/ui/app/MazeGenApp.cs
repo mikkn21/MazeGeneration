@@ -21,23 +21,15 @@ namespace MazeGen.ui.app {
         private readonly MazeWindow[] _mazeWindows;
         private RenderTexture2D[] _renderTextures;
         private Screen _currentScreen = Screen.Start;
-
-        // Background maze 
-        private Maze _backgroundMaze; 
-        private IGenerator _backgroundGenerator;
-        private const int BACKGROUND_CELL_SIZE = 30;
-        private const int BACKGROUND_WALL_THICKNESS = 3;
-        private const int FRAMES_PER_STEP = 4;
-        private int _frameCounter = 0;
+        
 
         private const int BUTTON_WIDTH = 200;
 
         private const int BUTTON_HEIGHT = 50;
         private const int MAZE_PADDING = 10;
 
-        // private float _instructionScrollY = 0;
-        // private float _totalInstructionContentHeight = 0;
         private ScreenInstruction _instructionScreen;
+        private ScreenStart _startScreen;
 
         public MazeGenApp(MazeWindow[] mazeDraws) {
             _mazeWindows = mazeDraws;
@@ -46,15 +38,8 @@ namespace MazeGen.ui.app {
             _windowWidth = (_mazeWindows[0].ScreenWidth * mazeDraws.Length) + (MAZE_PADDING * (mazeDraws.Length + 1)); // +1 for the outer edges
             _windowHeight = _mazeWindows[0].ScreenHeight + (2 * MAZE_PADDING);
 
-
-            // init background maze
-            int dimx = (int)Math.Ceiling((float)_windowWidth / BACKGROUND_CELL_SIZE);
-            int dimy = (int)Math.Ceiling((float)_windowHeight / BACKGROUND_CELL_SIZE);
-            _backgroundMaze = new Maze(dimx, dimy);
-            _backgroundGenerator = new Backtracking(_backgroundMaze);
-
-
             _instructionScreen = new ScreenInstruction(_windowWidth, _windowHeight, () => _currentScreen = Screen.Start);
+            _startScreen = new ScreenStart(_windowWidth, _windowHeight, () => _currentScreen = Screen.Maze, () => _currentScreen = Screen.Instruction, () => Debug.WriteLine("Settings clicked"));
         }
 
         private void InitializeRenderTextures() {
@@ -73,16 +58,20 @@ namespace MazeGen.ui.app {
             InitializeRenderTextures();
 
             _instructionScreen.Initialize();
+            _startScreen.Initialize();
 
             while (!Raylib.WindowShouldClose()) {
                 Vector2 mousePos = Raylib.GetMousePosition();
 
                 Raylib.BeginDrawing();
-                DrawBackgroundMaze();
+
+                if (_currentScreen != Screen.Maze) {
+                    _startScreen.DrawBackgroundMaze();
+                }
 
                 switch (_currentScreen) {
                     case Screen.Start:
-                        DrawStartScreen(mousePos);    
+                        _startScreen.Draw(mousePos);
                         break;
                     case Screen.Instruction:
                         _instructionScreen.Draw(mousePos);
@@ -98,80 +87,6 @@ namespace MazeGen.ui.app {
             }
 
             Cleanup();
-        }
-
-
-        private void DrawStartScreen(Vector2 mousePos){
-            // Title 
-            string title = "Maze Generator";
-            int titleFontsize = (int)(_windowWidth * 0.1f); 
-            titleFontsize = Math.Clamp(titleFontsize, 15, 140);
-            int padding = 10;
-            int textWidth = Raylib.MeasureText(title, titleFontsize);
-            
-            float rectWidth = textWidth + (2 * padding);
-            float rectHeight = titleFontsize + (2 * padding);
-            Rectangle titleRect = new Rectangle(
-                (_windowWidth / 2) - (rectWidth / 2) ,
-                (_windowHeight / 4) - (rectHeight / 2),
-                rectWidth,
-                rectHeight
-            );
-            Raylib.DrawRectangleRec(titleRect, Color.SkyBlue);
-            Raylib.DrawRectangleLinesEx(titleRect, 2, Color.Black);
-            
-            Raylib.DrawText(
-                title,
-                (int)titleRect.X + padding,
-                (int)titleRect.Y + padding,
-                titleFontsize,
-                Color.White
-            );
-
-
-            // Menu buttons
-            int verticalSpacing = (int)(_windowHeight * 0.05f);
-            verticalSpacing = Math.Clamp(verticalSpacing, 20, 100);
-            float baseY = titleRect.Y + rectHeight + verticalSpacing;
-
-            (string Label, Action onClick)[] buttonDefinitions = new(string, Action)[] {
-                ("Start", () => _currentScreen = Screen.Maze),
-                ("Settings", () => { /* TODO: Implement settings */ }),
-                ("Instructions", () => _currentScreen = Screen.Instruction)
-            };
-
-            List<Button> buttons = new();
-            for (int i = 0; i < buttonDefinitions.Length; i++) {
-                var (text, action) = buttonDefinitions[i];
-                buttons.Add(CreateMenuButton(text, titleFontsize, padding, baseY, i, verticalSpacing, action));
-            }
-
-            foreach (Button button in buttons) {
-                button.Update(mousePos);
-                button.Draw();
-            }
-        }
-
-
-        private Button CreateMenuButton( string buttonText, int titleFontsize, int padding, float baseY, int buttonIndex, int verticalSpacing, Action onClick) {
-            int menuButtonsFont = (int)(titleFontsize * 0.3f);
-            menuButtonsFont = Math.Clamp(menuButtonsFont, 12, 40);
-
-            int buttonTextWidth = Raylib.MeasureText(buttonText, menuButtonsFont);
-            int buttonWidth = buttonTextWidth + (2 * padding);
-            int buttonHeight = menuButtonsFont + (2 * padding);
-
-            int buttonY = (int)(baseY + (buttonHeight + verticalSpacing) * buttonIndex);
-
-            return new Button(
-                (_windowWidth / 2) - (buttonWidth / 2),
-                buttonY,
-                buttonWidth,
-                buttonHeight,
-                buttonText,
-                menuButtonsFont,
-                onClick
-            );
         }
 
 
@@ -191,7 +106,7 @@ namespace MazeGen.ui.app {
                 Vector2 localMousePos = mousePos - offset;
 
                 Raylib.BeginTextureMode(_renderTextures[i]);
-                    _mazeWindows[i].DrawFrame(localMousePos);
+                    _mazeWindows[i].DrawFrame();
                 Raylib.EndTextureMode();
             
             }
@@ -241,58 +156,6 @@ namespace MazeGen.ui.app {
             Raylib.CloseWindow();
         }
 
-        private void DrawBackgroundMaze() {
-            if (!_backgroundGenerator.IsComplete && _frameCounter >= FRAMES_PER_STEP) {
-                _backgroundGenerator.Step();
-                _frameCounter = 0;
-            }
-            _frameCounter++;
-
-        
-            for (int x = 0; x < _backgroundMaze.Width; x++) {
-                for (int y = 0; y < _backgroundMaze.Height; y++) {
-                    Tile tile = _backgroundMaze.GetTile(x, y);
-                    int posX = x * BACKGROUND_CELL_SIZE;
-                    int posY = y * BACKGROUND_CELL_SIZE;
-
-                    
-                    // Draw cell with very light gray for visited cells
-                    // Color cellColor = tile.State == TileState.Visited ? new Color(245, 245, 245, 255) : Color.White;
-                    Raylib.DrawRectangle(posX, posY, BACKGROUND_CELL_SIZE, BACKGROUND_CELL_SIZE, tile.Color);
-
-                    // Draw walls
-                    if (_backgroundMaze.HasWall(tile, Wall.North)) {
-                        Vector2 v1 = new Vector2(posX, posY);
-                        Vector2 v2 = new Vector2(posX + BACKGROUND_CELL_SIZE, posY);
-                        Raylib.DrawLineEx(v1, v2, BACKGROUND_WALL_THICKNESS, Color.Black);
-                    }
-                    
-                    if (_backgroundMaze.HasWall(tile, Wall.East)) {
-                        Vector2 v1 = new Vector2(posX + BACKGROUND_CELL_SIZE, posY);
-                        Vector2 v2 = new Vector2(posX + BACKGROUND_CELL_SIZE, posY + BACKGROUND_CELL_SIZE);
-                        Raylib.DrawLineEx(v1, v2, BACKGROUND_WALL_THICKNESS, Color.Black);
-                    }
-
-                    if (_backgroundMaze.HasWall(tile, Wall.South)) {
-                        Vector2 v1 = new Vector2(posX, posY + BACKGROUND_CELL_SIZE);
-                        Vector2 v2 = new Vector2(posX + BACKGROUND_CELL_SIZE, posY + BACKGROUND_CELL_SIZE);
-                        Raylib.DrawLineEx(v1, v2, BACKGROUND_WALL_THICKNESS, Color.Black);
-                    }
-
-                    if (_backgroundMaze.HasWall(tile, Wall.West)) {
-                        Vector2 v1 = new Vector2(posX, posY);
-                        Vector2 v2 = new Vector2(posX, posY + BACKGROUND_CELL_SIZE);
-                        Raylib.DrawLineEx(v1, v2, BACKGROUND_WALL_THICKNESS, Color.Black);
-                    }
-
-                    if (_backgroundGenerator.currentTile == tile) {
-                        int centerX = posX + BACKGROUND_CELL_SIZE / 2;
-                        int centerY = posY + BACKGROUND_CELL_SIZE / 2;
-                        int radius = BACKGROUND_CELL_SIZE / 4;
-                        Raylib.DrawCircle(centerX, centerY, radius, Color.Red); 
-                    }
-                }
-            } 
-        }
+       
     }
 }
