@@ -34,10 +34,8 @@ namespace MazeGen.ui.components {
         private const int BACKGROUND_CELL_SIZE = 30;
         private const int BACKGROUND_WALL_THICKNESS = 3;
         private const int FRAMES_PER_STEP = 4;
-        private int _frameCounter = 0;
 
-        
-
+    
         public ScreenStart(int parentWindowWidth, int parentWindowHeight, Action onStartClicked, Action onInstructionsClicked, Action onSettingsClicked) {
             _windowWidth = parentWindowWidth;
             _windowHeight = parentWindowHeight;

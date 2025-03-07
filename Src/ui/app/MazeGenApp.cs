@@ -31,6 +31,8 @@ namespace MazeGen.ui.app {
         private ScreenInstruction _instructionScreen;
         private ScreenStart _startScreen;
 
+        private ScreenMaze _mazeScreen;
+
         public MazeGenApp(MazeWindow[] mazeDraws) {
             _mazeWindows = mazeDraws;
             _renderTextures = new RenderTexture2D[_mazeWindows.Length];
@@ -40,6 +42,7 @@ namespace MazeGen.ui.app {
 
             _instructionScreen = new ScreenInstruction(_windowWidth, _windowHeight, () => _currentScreen = Screen.Start);
             _startScreen = new ScreenStart(_windowWidth, _windowHeight, () => _currentScreen = Screen.Maze, () => _currentScreen = Screen.Instruction, () => Debug.WriteLine("Settings clicked"));
+            _mazeScreen = new ScreenMaze(_windowWidth, _windowHeight, MazeLayout.ThreeMazes);
         }
 
         private void InitializeRenderTextures() {
@@ -59,6 +62,7 @@ namespace MazeGen.ui.app {
 
             _instructionScreen.Initialize();
             _startScreen.Initialize();
+            _mazeScreen.Initialize();
 
             while (!Raylib.WindowShouldClose()) {
                 Vector2 mousePos = Raylib.GetMousePosition();
@@ -78,84 +82,15 @@ namespace MazeGen.ui.app {
                         break;
                     case Screen.Maze:
                         Raylib.ClearBackground(Color.White);
-                        DrawMazeScreen(mousePos);
+                        _mazeScreen.Draw(mousePos);
                         break;
                 }
 
                 Raylib.EndDrawing();
 
             }
-
-            Cleanup();
-        }
-
-
-        private void DrawMazeScreen(Vector2 mousePos) {
-            int totalWidth = (_mazeWindows[0].ScreenWidth * _mazeWindows.Length) +
-                            (MAZE_PADDING * (_mazeWindows.Length - 1));
-            int startX = (_windowWidth - totalWidth) / 2;
-            
-
-            for (int i = 0; i < _mazeWindows.Length; i++) {
-                 // Calculate the offset for the current MazeDraw's render texture
-                Vector2 offset = new Vector2(
-                    startX + (i * (_mazeWindows[i].ScreenWidth + MAZE_PADDING)),
-                    MAZE_PADDING
-                );
-                 // Convert the global mouse position to local coordinates for this MazeDraw
-                Vector2 localMousePos = mousePos - offset;
-
-                Raylib.BeginTextureMode(_renderTextures[i]);
-                    _mazeWindows[i].DrawFrame();
-                Raylib.EndTextureMode();
-            
-            }
-
-
-            for (int i = 0; i < _mazeWindows.Length; i++) {
-
-                Rectangle sourceRect = new Rectangle(
-                    0,
-                    0,
-                    _renderTextures[i].Texture.Width,
-                    -_renderTextures[i].Texture.Height
-                ); 
-                
-                Rectangle destRect = new Rectangle(
-                    startX + (i * (_mazeWindows[i].ScreenWidth + MAZE_PADDING)),
-                    MAZE_PADDING, 
-                    _mazeWindows[i].ScreenWidth,
-                    _mazeWindows[i].ScreenHeight
-                );
-
-                Raylib.DrawTexturePro(
-                   _renderTextures[i].Texture, 
-                   sourceRect,  
-                   destRect,
-                   Vector2.Zero, 
-                   0f,
-                   Color.White
-                );
-
-            //     _exitButton.Rect = new Rectangle(
-            //         destRect.X + destRect.Width - _exitButton.Rect.Width - MAZE_PADDING,
-            //         destRect.Y + MAZE_PADDING, 
-            //         _exitButton.Rect.Width,
-            //         _exitButton.Rect.Height
-            //     );
-            //     _exitButton.Draw();
-            //     _exitButton.Update(mousePos);
-            }
-            
-        }
-
-        private void Cleanup() {
-            for (int i = 0; i < _renderTextures.Length; i++){
-                Raylib.UnloadRenderTexture(_renderTextures[i]);
-            }
+            _mazeScreen.Cleanup();
             Raylib.CloseWindow();
-        }
-
-       
+        }       
     }
 }
