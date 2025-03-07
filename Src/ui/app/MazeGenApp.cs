@@ -37,19 +37,19 @@ namespace MazeGen.ui.app {
             _mazeWindows = mazeDraws;
             _renderTextures = new RenderTexture2D[_mazeWindows.Length];
 
-            _windowWidth = (_mazeWindows[0].ScreenWidth * mazeDraws.Length) + (MAZE_PADDING * (mazeDraws.Length + 1)); // +1 for the outer edges
-            _windowHeight = _mazeWindows[0].ScreenHeight + (2 * MAZE_PADDING);
+            _windowWidth = (_mazeWindows[0].Width * mazeDraws.Length) + (MAZE_PADDING * (mazeDraws.Length + 1)); // +1 for the outer edges
+            _windowHeight = _mazeWindows[0].Height + (2 * MAZE_PADDING);
 
             _instructionScreen = new ScreenInstruction(_windowWidth, _windowHeight, () => _currentScreen = Screen.Start);
             _startScreen = new ScreenStart(_windowWidth, _windowHeight, () => _currentScreen = Screen.Maze, () => _currentScreen = Screen.Instruction, () => Debug.WriteLine("Settings clicked"));
-            _mazeScreen = new ScreenMaze(_windowWidth, _windowHeight, MazeLayout.ThreeMazes);
+            _mazeScreen = new ScreenMaze(_windowWidth, _windowHeight, MazeLayout.TwoMazes);
         }
 
         private void InitializeRenderTextures() {
             for (int i = 0; i < _mazeWindows.Length; i++) {
                 _renderTextures[i] = Raylib.LoadRenderTexture(
-                    _mazeWindows[i].ScreenWidth, 
-                    _mazeWindows[i].ScreenHeight
+                    _mazeWindows[i].Width, 
+                    _mazeWindows[i].Height
                 );
             }
         }

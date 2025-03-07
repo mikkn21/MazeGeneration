@@ -9,8 +9,8 @@ namespace MazeGen.ui
 {
     public class MazeWindow {
 
-        public int ScreenHeight { get; private set; }
-        public int ScreenWidth { get; private set; }
+        public int Height { get; private set; }
+        public int Width { get; private set; }
 
         private Maze _maze;
 
@@ -32,8 +32,8 @@ namespace MazeGen.ui
             _framesPerStep = framesPerStep;
             _generator = generator;
 
-            ScreenWidth = _maze.Width * _cellSize;
-            ScreenHeight = _maze.Height * _cellSize; 
+            Width = _maze.Width * _cellSize;
+            Height = _maze.Height * _cellSize; 
         }
 
         public void restartMaze() {
@@ -52,7 +52,7 @@ namespace MazeGen.ui
 
 
             // draw border                
-            Rectangle rect = new Rectangle(0, 0, ScreenWidth, ScreenHeight);
+            Rectangle rect = new Rectangle(0, 0, Width, Height);
             Raylib.DrawRectangleLinesEx(rect, _wallThickness, Color.Black);
         }
 

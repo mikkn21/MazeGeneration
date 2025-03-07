@@ -8,28 +8,36 @@ namespace MazeGen.ui.components {
 
     public class ControlPanel {
 
-        public float ControlPanelHeight => _backButton.Rect.Height + ButtonPadding * 2;
+        public Vector2 Position { get; set; }
+
+        public int Height { get; private set;}
+        public int Width { get; private set; }
 
         public event Action? OnReset;
 
+        private float _fontSize;
+        private float _panelY;
+        private float _buttonWidth;
+        private float  _buttonHeight;
         private Button _backButton;
         private Button _runStopRestartButton;
         private Button _stepButton;
-    
+     
         private IGenerator _generator;
 
         private bool _isRunning = false;
 
-        private readonly int _mazeWidth;
-        private readonly int _mazeHeight;
-        private int ButtonPadding => Math.Clamp((int)(_mazeWidth * 0.04f), 10, 40);
-
-
-        public ControlPanel(IGenerator generator, int mazeWidth, int mazeHeight) {
+        public ControlPanel(IGenerator generator, int width, int height) {
             _generator = generator;
-            _mazeWidth = mazeWidth;
-            _mazeHeight = mazeHeight;
+            Height = height;
+            Width = width;
+
+            _buttonWidth = Width / 3 * 0.90f;
+            _buttonHeight = Height;
+            _fontSize = _buttonWidth * 0.25f; // TODO: Clamp this value appropriately
+            
             (_backButton, _runStopRestartButton, _stepButton) = InitButtons();
+            
         }
 
 
@@ -65,6 +73,8 @@ namespace MazeGen.ui.components {
         }
 
         public void Draw() {
+            UpdatePositions();
+                        
             _backButton.Draw();
             _runStopRestartButton.Draw();
             _stepButton.Draw();
@@ -72,23 +82,29 @@ namespace MazeGen.ui.components {
 
         public bool IsRunning() => _isRunning;
 
+
+        public void UpdatePositions() {
+            var positions = CalculatePositions();
+            float backX = positions.backX;
+            float runStopX = positions.runStopX;
+            float stepX = positions.stepX;
+
+            
+            float buttonY = (Height - _buttonHeight) / 2;
+            _backButton.UpdatePosition(backX + Position.X, buttonY + Position.Y);
+            _runStopRestartButton.UpdatePosition(runStopX + Position.X, buttonY + Position.Y);
+            _stepButton.UpdatePosition(stepX + Position.X, buttonY + Position.Y);
+        }
+
         private (Button back, Button runStopRe, Button step) InitButtons() {
-            int panelY = _mazeHeight + ButtonPadding;
-            int fontSize = (int) (_mazeWidth * 0.05f);
-            fontSize = Math.Clamp(fontSize, 12, 40);
-
-            int buttonWidth = (int)(_mazeWidth * 0.2f);  // 20% of maze width
-            int buttonHeight = fontSize + (2 * ButtonPadding);  // Using your PADDING constant
-
-            // Calculate positions
-            float centerX = _mazeWidth / 2;
-            float runStopX = centerX - buttonWidth / 2;
-            float backX = runStopX - buttonWidth - ButtonPadding;
-            float stepX = runStopX + buttonWidth + ButtonPadding;
+            var positions = CalculatePositions();
+            float backX = positions.backX;
+            float runStopX = positions.runStopX;
+            float stepX = positions.stepX;
 
             Button back = new Button(
-                (int)backX, panelY, buttonWidth, buttonHeight,
-                "Back", fontSize, () => {
+                backX, _panelY, _buttonWidth, _buttonHeight,
+                "Back", _fontSize, () => {
                      _generator.Back();
                     if (_isRunning) {
                         _isRunning = false;
@@ -98,8 +114,8 @@ namespace MazeGen.ui.components {
             );
 
             Button runStopRestart = new Button(
-                (int)runStopX, panelY, buttonWidth, buttonHeight,
-                "Run", fontSize, () => {
+                runStopX, _panelY, _buttonWidth, _buttonHeight,
+                "Run", _fontSize, () => {
                     if (_generator.IsComplete) {
                         _generator.Restart();
                         _runStopRestartButton.Label = "Run";
@@ -121,8 +137,8 @@ namespace MazeGen.ui.components {
             );
                 
             Button step = new Button(
-                (int)stepX, panelY, buttonWidth, buttonHeight,
-                "Step", fontSize, () => { 
+                stepX, _panelY, _buttonWidth, _buttonHeight,
+                "Step", _fontSize, () => { 
                     _generator.Step();
                     if (_isRunning) {
                         _isRunning = false;
@@ -133,7 +149,28 @@ namespace MazeGen.ui.components {
 
             return (back, runStopRestart, step);
         }
+
+
+        private (float backX, float runStopX, float stepX) CalculatePositions() {
+            float sectionWidth = Width / 3;
+
+            float leftSectionCenter = sectionWidth / 2;
+            float middleSectionCenter = sectionWidth + sectionWidth / 2;
+            float rightSectionCenter = 2 * sectionWidth + sectionWidth / 2;           
+
+            // center buttons in its section
+            float backX = leftSectionCenter - _buttonWidth / 2;
+            float runStopX = middleSectionCenter - _buttonWidth / 2;
+            float stepX = rightSectionCenter - _buttonWidth / 2;
+
+            // float centerX = Width / 2;
+            // float runStopX = centerX - _buttonWidth / 2;
+            // float backX = 0;
+            // float stepX = Width - _buttonWidth;
+
+            return (backX, runStopX, stepX);
+
+        }
+
     }
-
-
 }

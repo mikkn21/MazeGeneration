@@ -1,5 +1,4 @@
 using System.Numerics;
-using System.Runtime.InteropServices;
 using MazeGen.Algorithms;
 using MazeGen.maze;
 using Raylib_cs;
@@ -17,22 +16,32 @@ namespace MazeGen.ui.components {
     public class ScreenMaze {
 
         private MazeWindow[] _mazeWindows;
+        private ControlPanel[] _controlPanels;
         private RenderTexture2D[] _renderTextures;
         private readonly int _windowWidth;
         private readonly int _windowHeight;
         private int _mazeCount;
         private const int MAZE_PADDING = 10;
 
+        const float CONTROL_PANE_HEIGHT_SCALE = 0.10f; 
+       
+        private int _controlPanelHeight;
+
         public MazeLayout CurrentLayout { get; set; }
 
+        private int _mazeWidth;
+        private int _mazeHeight;
 
-        public ScreenMaze(int windowWidth, int windowHeight, MazeLayout layout) {
+        public ScreenMaze(int windowWidth, int windowHeight, MazeLayout layout, int mazeWidth = 10, int mazeHeight = 10) {
             _mazeWindows = Array.Empty<MazeWindow>();
             _renderTextures = Array.Empty<RenderTexture2D>();
             _windowWidth = windowWidth;
             _windowHeight = windowHeight;   
             CurrentLayout = layout;
 
+            _mazeWidth = mazeWidth;
+            _mazeHeight = mazeHeight; 
+        
         }
 
         public void Initialize() {
@@ -45,18 +54,18 @@ namespace MazeGen.ui.components {
             };
 
             _mazeWindows = new MazeWindow[_mazeCount];
+            _controlPanels = new ControlPanel[_mazeCount];
             _renderTextures = new RenderTexture2D[_mazeCount];
 
-            int mazeWidth = 10; // TODO: The maze size should be an argument to the constructor
-            int mazeHeight = 10; // TODO: The maze size should be an argument to the constructor
 
-            int cellSize = CalculateCellSize(mazeWidth, mazeHeight);
+            _controlPanelHeight = CalculateControlPanelHeight();
+            int cellSize = CalculateCellSize(_mazeWidth, _mazeHeight);
             
             int wallThickness = Math.Max(1, cellSize / 10); // Proportional to cell size
 
 
             for (int i = 0; i < _mazeCount; i++) {
-                Maze maze = new Maze (mazeWidth, mazeHeight); 
+                Maze maze = new Maze (_mazeWidth, _mazeHeight); 
 
                 IGenerator generator = new Backtracking(maze);
                  
@@ -68,12 +77,13 @@ namespace MazeGen.ui.components {
                     5 // TODO: The frames per step should be an argument to the constructor 
                 );
 
+                _controlPanels[i] = new ControlPanel(generator, _mazeWindows[i].Width, _controlPanelHeight);
+
                 _renderTextures[i] = Raylib.LoadRenderTexture(
-                    _mazeWindows[i].ScreenWidth,
-                    _mazeWindows[i].ScreenHeight
+                    _mazeWindows[i].Width,
+                    _mazeWindows[i].Height + _controlPanels[i].Height
                 );
             }
-
         }
 
         private int CalculateCellSize(int mazeWidth, int mazeHeight) {
@@ -82,23 +92,23 @@ namespace MazeGen.ui.components {
             switch (CurrentLayout) {
                 case MazeLayout.OneMaze: 
                     availableWidth = _windowWidth - (2 * MAZE_PADDING);
-                    availableHeight = _windowHeight - (2 * MAZE_PADDING);
+                    availableHeight = _windowHeight - _controlPanelHeight - (2 * MAZE_PADDING);
                     break;
 
                 case MazeLayout.TwoMazes:
-                    availableWidth = (_windowWidth - (3 * MAZE_PADDING)) / 2;
-                    availableHeight = _windowHeight - (2 * MAZE_PADDING);
+                    availableWidth = (_windowWidth / 2) - (3 * MAZE_PADDING);
+                    availableHeight = _windowHeight - _controlPanelHeight - (2 * MAZE_PADDING);
                     break;
                 
                 case MazeLayout.ThreeMazes:
                 case MazeLayout.FourMazes: 
-                    availableWidth = (_windowWidth - (4 * MAZE_PADDING)) / 3;
-                    availableHeight = (_windowHeight - (3 * MAZE_PADDING)) / 2;
+                    availableWidth = (_windowWidth  / 2) - (3 * MAZE_PADDING);
+                    availableHeight = (_windowHeight/2) - _controlPanelHeight - (2 * MAZE_PADDING);
                     break;
                 
                 default: 
                     availableWidth = _windowWidth / 2;
-                    availableHeight = _windowHeight /2;
+                    availableHeight = (_windowHeight - _controlPanelHeight) /2;
                     break;
             }
 
@@ -108,19 +118,50 @@ namespace MazeGen.ui.components {
             return Math.Min(cellWidthSize, cellHeightSize);
         }
 
+        private int CalculateControlPanelHeight() {
+            int availableHeight;
+
+            switch (CurrentLayout)
+            {
+                case MazeLayout.OneMaze:
+                case MazeLayout.TwoMazes:
+                    // For 1-row layouts, use percentage of window height
+                    availableHeight = _windowHeight;
+                    break;
+
+                case MazeLayout.ThreeMazes:
+                case MazeLayout.FourMazes:
+                    // For 2x2 layouts, use percentage of half window height
+                    availableHeight = _windowHeight / 2;
+                    break;
+
+                default:
+                    availableHeight = _windowHeight;
+                    break;
+            }
+            
+            int panelHeight = (int)(availableHeight * CONTROL_PANE_HEIGHT_SCALE);
+            // Consider if this is necessary
+            // panelHeight = Math.Max(30, Math.Min(60, panelHeight));
+            
+
+            return panelHeight;
+        }
+
+
         public void Draw(Vector2 mousePos) {
             Rectangle[] destRects = CalculateDestRects();
 
             for (int i = 0; i < _mazeWindows.Length; i++) {
                 Vector2 offset = new Vector2(destRects[i].X, destRects[i].Y);
                 Vector2 localMousePos = mousePos - offset;
-               
-            
+
                 Raylib.BeginTextureMode(_renderTextures[i]);
                 _mazeWindows[i].DrawFrame();
                 Raylib.EndTextureMode();
 
             }
+            
 
             // draw textures
             for (int i = 0; i < _mazeWindows.Length; i++) {
@@ -140,56 +181,80 @@ namespace MazeGen.ui.components {
                    0f,
                    Color.White
                 );
-
-                //     _exitButton.Rect = new Rectangle(
-                //         destRect.X + destRect.Width - _exitButton.Rect.Width - MAZE_PADDING,
-                //         destRect.Y + MAZE_PADDING, 
-                //         _exitButton.Rect.Width,
-                //         _exitButton.Rect.Height
-                //     );
-                //     _exitButton.Draw();
-                //     _exitButton.Update(mousePos);
             }
+
+            for (int i = 0; i < _controlPanels.Length; i++) {
+                _controlPanels[i].Position = new Vector2 ( 
+                    destRects[i].X,
+                    destRects[i].Y + _mazeWindows[i].Height + 5
+                );
+
+                Vector2 localMousePos = mousePos - _controlPanels[i].Position;
+
+                if (localMousePos.X >= 0 && localMousePos.X <= _controlPanels[i].Width &&
+                    localMousePos.Y >= 0 && localMousePos.Y <= _controlPanels[i].Height) {
+                    
+                    _controlPanels[i].Update(localMousePos);
+                }        
+                _controlPanels[i].Draw(); 
+            }
+
+            //     _exitButton.Rect = new Rectangle(
+            //         destRect.X + destRect.Width - _exitButton.Rect.Width - MAZE_PADDING,
+            //         destRect.Y + MAZE_PADDING, 
+            //         _exitButton.Rect.Width,
+            //         _exitButton.Rect.Height
+            //     );
+            //     _exitButton.Draw();
+            //     _exitButton.Update(mousePos);
+
 
         }
 
         private Rectangle[] CalculateDestRects() {
             Rectangle[] destRects = new Rectangle[_mazeWindows.Length];
+            int mazeWidth = _mazeWindows[0].Width;
+            int mazeHeight = _mazeWindows[0].Height;
+            int controlHeight = _controlPanels[0].Height;
 
+
+            int totalHeightPerMaze = mazeHeight + controlHeight;
             if (CurrentLayout == MazeLayout.FourMazes || CurrentLayout == MazeLayout.ThreeMazes) {
                 // For a 2x2 grid layout:
-                int mazeWidth = _mazeWindows[0].ScreenWidth;
-                int mazeHeight = _mazeWindows[0].ScreenHeight;
-
-                int gridWidth = (mazeWidth * 2) + MAZE_PADDING;
-                int gridHeight = (mazeHeight * 2) + MAZE_PADDING;
+                int gridWidth = (mazeWidth * 2) + (3 * MAZE_PADDING); 
+                int gridHeight = (totalHeightPerMaze * 2) + (3 * MAZE_PADDING); // 2 rows, 1 gap
                 int startX = (_windowWidth - gridWidth) / 2;
                 int startY = (_windowHeight - gridHeight) / 2;
+                
+                
 
                 for (int i = 0; i < _mazeCount; i++) {
                     int row = i / 2;
                     int col = i % 2;
                     destRects[i] = new Rectangle(
-                        startX + (col * (mazeWidth + MAZE_PADDING)),
-                        startY + (row * (mazeHeight + MAZE_PADDING)),
+                        startX + MAZE_PADDING + (col * (mazeWidth + MAZE_PADDING)), 
+                        startY + MAZE_PADDING + (row * (totalHeightPerMaze + MAZE_PADDING)), 
                         mazeWidth,
-                        mazeHeight
+                        totalHeightPerMaze
                     );
                 }
             }
             else {
                 // For a single row layout (OneMaze or TwoMazes):
-                int totalWidth = (_mazeWindows[0].ScreenWidth * _mazeWindows.Length) +
-                                 (MAZE_PADDING * (_mazeWindows.Length - 1));
-                int startX = Math.Abs(_windowWidth - totalWidth) / 2;
-                int mazeHeight = _mazeWindows[0].ScreenHeight;
+                int paddingSpaces = _mazeWindows.Length + 1;
+    
+                int gridWidth = (mazeWidth * _mazeWindows.Length) + (paddingSpaces * MAZE_PADDING); 
+                int gridHeight = totalHeightPerMaze + (2  * MAZE_PADDING); 
+                int startX = (_windowWidth - gridWidth) / 2;
+                int startY = (_windowHeight - gridHeight) / 2;
+
 
                 for (int i = 0; i < _mazeWindows.Length; i++) {
                     destRects[i] = new Rectangle(
-                        startX + (i * (_mazeWindows[i].ScreenWidth + MAZE_PADDING)),
-                        MAZE_PADDING,
-                        _mazeWindows[i].ScreenWidth,
-                        mazeHeight
+                        startX + MAZE_PADDING + (i * (mazeWidth + MAZE_PADDING)),
+                        startY + MAZE_PADDING,
+                        mazeWidth,
+                        totalHeightPerMaze
                     );
                 }
             }

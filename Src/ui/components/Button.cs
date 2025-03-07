@@ -79,6 +79,10 @@ namespace MazeGen.ui.components {
             }
         }
 
+        public void UpdatePosition(float x, float y) {
+            Rect = new Rectangle(x, y, Width, Height);
+        }
+
         public void Update(Vector2 mousePos) {
             if (!IsEnabled) {
                 TextColor = Color.Gray; 
