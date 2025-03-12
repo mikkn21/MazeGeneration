@@ -1,10 +1,6 @@
 using System.Diagnostics;
 using System.Numerics;
-using MazeGen.Algorithms;
-using MazeGen.maze;
-using MazeGen.maze.tile;
-using MazeGen.maze.wall;
-using MazeGen.ui.components;
+using MazeGen.ui.components.screens;
 using Raylib_cs;
 
 namespace MazeGen.ui.app {
@@ -28,10 +24,10 @@ namespace MazeGen.ui.app {
         private const int BUTTON_HEIGHT = 50;
         private const int MAZE_PADDING = 10;
 
-        private ScreenInstruction _instructionScreen;
-        private ScreenStart _startScreen;
+        private IScreen _instructionScreen;
+        private IScreen _startScreen;
 
-        private ScreenMaze _mazeScreen;
+        private IScreen _mazeScreen;
 
         public MazeGenApp(MazeWindow[] mazeDraws) {
             _mazeWindows = mazeDraws;

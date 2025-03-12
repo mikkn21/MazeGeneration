@@ -1,8 +1,8 @@
 using System.Numerics;
 using Raylib_cs;
 
-namespace MazeGen.ui.components {
-    public class ScreenInstruction {
+namespace MazeGen.ui.components.screens {
+    public class ScreenInstruction : IScreen {
 
         public bool IsInitialized { get; private set; } = false;
         

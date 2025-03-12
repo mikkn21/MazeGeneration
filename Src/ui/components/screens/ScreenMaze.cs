@@ -3,7 +3,7 @@ using MazeGen.Algorithms;
 using MazeGen.maze;
 using Raylib_cs;
 
-namespace MazeGen.ui.components {
+namespace MazeGen.ui.components.screens {
 
     public enum MazeLayout {
         OneMaze,
@@ -13,7 +13,7 @@ namespace MazeGen.ui.components {
     }
 
 
-    public class ScreenMaze {
+    public class ScreenMaze : IScreen {
 
         private MazeWindow[] _mazeWindows;
         private ControlPanel[] _controlPanels;
@@ -28,6 +28,8 @@ namespace MazeGen.ui.components {
         private int _controlPanelHeight;
 
         public MazeLayout CurrentLayout { get; set; }
+
+        public bool IsInitialized { get; private set; } = false;
 
         private int _mazeWidth;
         private int _mazeHeight;
@@ -82,6 +84,7 @@ namespace MazeGen.ui.components {
                     _mazeWindows[i].Height + _controlPanels[i].Height
                 );
             }
+            IsInitialized = true;
         }
 
         private int CalculateCellSize(int mazeWidth, int mazeHeight) {

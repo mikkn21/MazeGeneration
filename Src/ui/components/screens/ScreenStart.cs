@@ -1,13 +1,11 @@
 using System.Numerics;
 using MazeGen.Algorithms;
 using MazeGen.maze;
-using MazeGen.maze.tile;
-using MazeGen.maze.wall;
 using Raylib_cs;
 
-namespace MazeGen.ui.components {
+namespace MazeGen.ui.components.screens {
 
-    public class ScreenStart {
+    public class ScreenStart : IScreen  {
 
         public bool IsInitialized { get; private set; } = false;
         private readonly int _windowWidth;
