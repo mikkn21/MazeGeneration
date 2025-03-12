@@ -88,7 +88,6 @@ namespace MazeGen.ui.components {
                 TextColor = Color.Gray; 
                 return;
             }
-            
             if (Raylib.CheckCollisionPointRec(mousePos, Rect)) {
                 TextColor = Color.Yellow;
                 if (Raylib.IsMouseButtonPressed(MouseButton.Left)) {

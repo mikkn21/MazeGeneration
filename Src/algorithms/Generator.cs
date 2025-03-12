@@ -7,7 +7,7 @@ public interface IGenerator {
 
     void Back(); 
 
-    Tile? currentTile { get; }
+    Tile? CurrentTile { get; }
 
     bool IsComplete { get; }
 

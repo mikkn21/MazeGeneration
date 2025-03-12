@@ -40,11 +40,7 @@ namespace MazeGen.ui.components {
             CurrentLayout = layout;
 
             _mazeWidth = mazeWidth;
-            _mazeHeight = mazeHeight; 
-        
-        }
-
-        public void Initialize() {
+            _mazeHeight = mazeHeight;
             _mazeCount = CurrentLayout switch {
                 MazeLayout.OneMaze => 1,
                 MazeLayout.TwoMazes => 2,
@@ -55,9 +51,11 @@ namespace MazeGen.ui.components {
 
             _mazeWindows = new MazeWindow[_mazeCount];
             _controlPanels = new ControlPanel[_mazeCount];
-            _renderTextures = new RenderTexture2D[_mazeCount];
+            _renderTextures = new RenderTexture2D[_mazeCount]; 
+        
+        }
 
-
+        public void Initialize() {
             _controlPanelHeight = CalculateControlPanelHeight();
             int cellSize = CalculateCellSize(_mazeWidth, _mazeHeight);
             
@@ -77,7 +75,7 @@ namespace MazeGen.ui.components {
                     5 // TODO: The frames per step should be an argument to the constructor 
                 );
 
-                _controlPanels[i] = new ControlPanel(generator, _mazeWindows[i].Width, _controlPanelHeight);
+                _controlPanels[i] = new ControlPanel(_mazeWindows[i], _mazeWindows[i].Width, _controlPanelHeight);
 
                 _renderTextures[i] = Raylib.LoadRenderTexture(
                     _mazeWindows[i].Width,
@@ -183,19 +181,13 @@ namespace MazeGen.ui.components {
                 );
             }
 
+            // TODO: Find out if can be drawn in one of the other loops.
             for (int i = 0; i < _controlPanels.Length; i++) {
                 _controlPanels[i].Position = new Vector2 ( 
                     destRects[i].X,
-                    destRects[i].Y + _mazeWindows[i].Height + 5
+                    destRects[i].Y + _mazeWindows[i].Height + 5 // 5 is padding between maze and control panel
                 );
-
-                Vector2 localMousePos = mousePos - _controlPanels[i].Position;
-
-                if (localMousePos.X >= 0 && localMousePos.X <= _controlPanels[i].Width &&
-                    localMousePos.Y >= 0 && localMousePos.Y <= _controlPanels[i].Height) {
-                    
-                    _controlPanels[i].Update(localMousePos);
-                }        
+                _controlPanels[i].Update(mousePos);
                 _controlPanels[i].Draw(); 
             }
 
@@ -217,12 +209,13 @@ namespace MazeGen.ui.components {
             int mazeHeight = _mazeWindows[0].Height;
             int controlHeight = _controlPanels[0].Height;
 
-
             int totalHeightPerMaze = mazeHeight + controlHeight;
+
             if (CurrentLayout == MazeLayout.FourMazes || CurrentLayout == MazeLayout.ThreeMazes) {
                 // For a 2x2 grid layout:
                 int gridWidth = (mazeWidth * 2) + (3 * MAZE_PADDING); 
-                int gridHeight = (totalHeightPerMaze * 2) + (3 * MAZE_PADDING); // 2 rows, 1 gap
+                int controlPanelPadding = 5;
+                int gridHeight = (totalHeightPerMaze * 2) + controlPanelPadding + (3 * MAZE_PADDING); // 2 rows, 1 gap
                 int startX = (_windowWidth - gridWidth) / 2;
                 int startY = (_windowHeight - gridHeight) / 2;
                 

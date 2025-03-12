@@ -23,12 +23,10 @@ namespace MazeGen.ui.components {
         private Button _runStopRestartButton;
         private Button _stepButton;
      
-        private IGenerator _generator;
+        private MazeWindow _mazeWindow;
 
-        private bool _isRunning = false;
-
-        public ControlPanel(IGenerator generator, int width, int height) {
-            _generator = generator;
+        public ControlPanel(MazeWindow mazeWindow, int width, int height) {
+            _mazeWindow = mazeWindow;
             Height = height;
             Width = width;
 
@@ -39,8 +37,7 @@ namespace MazeGen.ui.components {
             (_backButton, _runStopRestartButton, _stepButton) = InitButtons();
             
         }
-
-
+        
         public void Update(Vector2 mousePos) {
             UpdateButttonStates(); 
             UpdateButtonsInput(mousePos);
@@ -48,7 +45,7 @@ namespace MazeGen.ui.components {
 
         private void UpdateButttonStates() {
             // Completion state 
-            if (_generator.IsComplete) {
+            if (_mazeWindow.IsComplete) {
                 _runStopRestartButton.Label = "Restart";
                 _stepButton.IsEnabled = false;
             } else {
@@ -56,13 +53,12 @@ namespace MazeGen.ui.components {
             }
 
             // Running state 
-            if (_isRunning && !_generator.IsComplete)
-            {
+            if (_mazeWindow.IsRunning && !_mazeWindow.IsComplete) {
                 // If the "run" button is pressed, disable the other buttons
                 _stepButton.IsEnabled = false;
                 _backButton.IsEnabled = false;
             } else {
-                _backButton.IsEnabled = _generator.CanUndo;
+                _backButton.IsEnabled = _mazeWindow.CanUndo;
             }
         }
 
@@ -79,8 +75,6 @@ namespace MazeGen.ui.components {
             _runStopRestartButton.Draw();
             _stepButton.Draw();
         }        
-
-        public bool IsRunning() => _isRunning;
 
 
         public void UpdatePositions() {
@@ -105,9 +99,9 @@ namespace MazeGen.ui.components {
             Button back = new Button(
                 backX, _panelY, _buttonWidth, _buttonHeight,
                 "Back", _fontSize, () => {
-                     _generator.Back();
-                    if (_isRunning) {
-                        _isRunning = false;
+                     _mazeWindow.Back();
+                    if (_mazeWindow.IsRunning) {
+                        _mazeWindow.IsRunning = false;
                         _runStopRestartButton.Label = "Run";
                     } 
                  }
@@ -116,21 +110,21 @@ namespace MazeGen.ui.components {
             Button runStopRestart = new Button(
                 runStopX, _panelY, _buttonWidth, _buttonHeight,
                 "Run", _fontSize, () => {
-                    if (_generator.IsComplete) {
-                        _generator.Restart();
+                    if (_mazeWindow.IsComplete) {
+                        _mazeWindow.restartMaze();
                         _runStopRestartButton.Label = "Run";
-                        _isRunning = false;
+                        _mazeWindow.IsRunning = false;
                         _runStopRestartButton.IsEnabled = true;
                         _stepButton.IsEnabled = true;
                         OnReset?.Invoke();
                     }
-                    else if (_isRunning) {
+                    else if (_mazeWindow.IsRunning) {
                         _runStopRestartButton.Label = "Run";
-                        _isRunning = false;
+                        _mazeWindow.IsRunning = false;
                     }
                     else {
                         _runStopRestartButton.Label = "Stop";
-                        _isRunning = true;
+                        _mazeWindow.IsRunning = true;
                     } 
 
                  }
@@ -139,10 +133,9 @@ namespace MazeGen.ui.components {
             Button step = new Button(
                 stepX, _panelY, _buttonWidth, _buttonHeight,
                 "Step", _fontSize, () => { 
-                    _generator.Step();
-                    if (_isRunning) {
-                        _isRunning = false;
-                        _runStopRestartButton.Label = "Run";
+                    _mazeWindow.Step();
+                    if (_mazeWindow.IsRunning) {
+                        _mazeWindow.IsRunning = false;
                     }
                  }
             );

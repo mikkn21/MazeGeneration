@@ -18,7 +18,7 @@ namespace MazeGen.Algorithms {
 
         public bool CanUndo => _undoStack.Count > 0;
 
-        public Tile? currentTile => _stack.Count > 0 ? _stack.Peek() : null; 
+        public Tile? CurrentTile => _stack.Count > 0 ? _stack.Peek() : null; 
 
         public Backtracking(Maze maze){
             _maze = maze;

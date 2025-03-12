@@ -12,6 +12,12 @@ namespace MazeGen.ui
         public int Height { get; private set; }
         public int Width { get; private set; }
 
+        public bool IsComplete => _generator.IsComplete;
+        public bool CanUndo => _generator.CanUndo;
+        public Tile? CurrentTile => _generator?.CurrentTile;
+
+        public bool IsRunning { get; set;}
+
         private Maze _maze;
 
         // _framesPerStep = 1   -> 60 steps per second (fastest)
@@ -22,15 +28,18 @@ namespace MazeGen.ui
         private int _framesCounter = 0;
         private readonly int _cellSize; // Size of each cell in pixels
         private readonly int _wallThickness; // Thickness of the walls in pixels
-        private IGenerator _generator; 
+        private IGenerator _generator;
 
+        
 
-        public MazeWindow(Maze maze, int cellSize, IGenerator generator, int wallThickness = 3, int framesPerStep = 1){
+        public MazeWindow(Maze maze, int cellSize, IGenerator generator, int wallThickness = 3, int framesPerStep = 1, bool autoRun = false){
             _maze = maze;
             _cellSize = cellSize;
             _wallThickness = wallThickness;
             _framesPerStep = framesPerStep;
             _generator = generator;
+
+            IsRunning = autoRun; 
 
             Width = _maze.Width * _cellSize;
             Height = _maze.Height * _cellSize; 
@@ -40,8 +49,17 @@ namespace MazeGen.ui
             _generator.Restart();
         }
 
+        public void Step() {
+            _generator.Step();
+        }
+
+        public void Back() {
+            _generator.Back();
+        }
+
+
         public void DrawFrame() {
-            if (!_generator.IsComplete && _framesCounter >= _framesPerStep){
+            if (!_generator.IsComplete && _framesCounter >= _framesPerStep && IsRunning){
                 _generator.Step();
                 _framesCounter = 0;
             }
@@ -61,7 +79,7 @@ namespace MazeGen.ui
             for (int x = 0; x < _maze.Width; x++){
                 for (int y = 0; y < _maze.Height; y++){
                     Tile tile = _maze.GetTile(x, y);
-                    bool isCurrentTile = _generator.currentTile == tile;
+                    bool isCurrentTile = _generator.CurrentTile == tile;
                     DrawCell(tile, isCurrentTile);
                 }
             }
