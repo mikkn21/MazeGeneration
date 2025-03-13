@@ -136,6 +136,8 @@ namespace MazeGen.ui.components.screens {
         }
 
          public void DrawBackgroundMaze() {
+            
+
             _mazeWindow.DrawFrame();
             if (_backgroundGenerator.IsComplete) {
                 _backgroundGenerator.Restart();

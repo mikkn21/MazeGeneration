@@ -74,7 +74,8 @@ namespace MazeGen.ui.components.screens {
                     cellSize, 
                     generator,
                     wallThickness, 
-                    5 // TODO: The frames per step should be an argument to the constructor 
+                    1
+                    // 5 // TODO: The frames per step should be an argument to the constructor 
                 );
 
                 _controlPanels[i] = new ControlPanel(_mazeWindows[i], _mazeWindows[i].Width, _controlPanelHeight);
@@ -151,6 +152,10 @@ namespace MazeGen.ui.components.screens {
 
 
         public void Draw(Vector2 mousePos) {
+            if (!IsInitialized) {
+                Initialize();
+            }
+
             Rectangle[] destRects = CalculateDestRects();
 
             for (int i = 0; i < _mazeWindows.Length; i++) {

@@ -1,5 +1,8 @@
 
+using System.Formats.Tar;
 using System.Numerics;
+using System.Security.Cryptography.X509Certificates;
+using System.Threading.Tasks.Dataflow;
 using Raylib_cs;
 
 namespace MazeGen.ui.components {
@@ -16,12 +19,15 @@ namespace MazeGen.ui.components {
         public event Action? OnReset;
 
         private float _fontSize;
+        private float _fontSize2;
+        private float _measuredTextWidth;
         private float _panelY;
         private float _buttonWidth;
         private float  _buttonHeight;
         private Button _backButton;
         private Button _runStopRestartButton;
         private Button _stepButton;
+        private readonly int _textSpacing = 2;
      
         private MazeWindow _mazeWindow;
 
@@ -30,17 +36,56 @@ namespace MazeGen.ui.components {
             Height = height;
             Width = width;
 
-            _buttonWidth = Width / 3 * 0.90f;
             _buttonHeight = Height;
-            _fontSize = _buttonWidth * 0.25f; // TODO: Clamp this value appropriately
-            
+            ScaleFontSizeAndButtonWidth();
+
+
             (_backButton, _runStopRestartButton, _stepButton) = InitButtons();
-            
+    
+        }
+
+        public void debug() {
+           Console.WriteLine($"buttonWidth = {_buttonWidth}, measuredWidth = {_measuredTextWidth}");
+           Console.WriteLine($"fontSize1 = {_fontSize}, fontSize2 = {_fontSize2}");
+           Console.WriteLine($"BackButtonWidth = {_backButton.Width}, RunStopWidth = {_runStopRestartButton.Width}, StepWidth = {_stepButton.Width}");
         }
         
         public void Update(Vector2 mousePos) {
             UpdateButttonStates(); 
             UpdateButtonsInput(mousePos);
+        }
+        
+        
+        // Scale the font size and button width to a range between 85% and 90% of the section width 
+        // If the text does not fit in 90%, scale the font size down until it fits
+        // However if the text fits in the range of 85% to 90%, keep the font size and scale the button width to fit the text
+        private void ScaleFontSizeAndButtonWidth() {
+            float sectionWidth = Width / 3; // as we have 3 buttons 
+
+            float tagetButtonWidth = sectionWidth * 0.85f; 
+
+            float idealFontSize = tagetButtonWidth * 0.20f;
+            _fontSize = idealFontSize;
+
+            _measuredTextWidth = Raylib.MeasureTextEx(Raylib.GetFontDefault(), "Restart", _fontSize, _textSpacing).X;
+
+            float maxAllowedButtonWidth = sectionWidth * 0.90f; 
+
+
+            if (_measuredTextWidth <= tagetButtonWidth) { 
+                _buttonWidth = tagetButtonWidth; // text fits 
+            }
+            else if (_measuredTextWidth <= maxAllowedButtonWidth) {
+                _buttonWidth = _measuredTextWidth; // text needs more space, but it can fit within 95%
+            }
+            else {
+                // text does not fit in 95% 
+                _buttonWidth = maxAllowedButtonWidth;
+                float scaleFactor = maxAllowedButtonWidth / _measuredTextWidth; 
+                _fontSize = _fontSize * scaleFactor;
+            }
+
+            _fontSize2 = idealFontSize;
         }
 
         private void UpdateButttonStates() {
@@ -70,7 +115,6 @@ namespace MazeGen.ui.components {
 
         public void Draw() {
             UpdatePositions();
-                        
             _backButton.Draw();
             _runStopRestartButton.Draw();
             _stepButton.Draw();
@@ -132,7 +176,8 @@ namespace MazeGen.ui.components {
                 
             Button step = new Button(
                 stepX, _panelY, _buttonWidth, _buttonHeight,
-                "Step", _fontSize, () => { 
+                "Step", _fontSize, () => {
+                    debug(); 
                     _mazeWindow.Step();
                     if (_mazeWindow.IsRunning) {
                         _mazeWindow.IsRunning = false;

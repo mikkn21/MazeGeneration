@@ -64,7 +64,6 @@ namespace MazeGen.ui.components.screens {
 
         public void Draw(Vector2 mousePos)  {
             if (!IsInitialized) {
-                // Optionally, initialize automatically if not already done
                 Initialize();
             }
 
