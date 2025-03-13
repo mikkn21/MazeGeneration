@@ -18,7 +18,7 @@ namespace MazeGen.ui.components {
 
         public event Action? OnReset;
 
-        private float _fontSize;
+        public float FontSize { get; private set; }
         private float _panelY;
         private float _buttonWidth;
         private float  _buttonHeight;
@@ -56,9 +56,9 @@ namespace MazeGen.ui.components {
             float tagetButtonWidth = sectionWidth * 0.85f; 
 
             float idealFontSize = tagetButtonWidth * 0.20f;
-            _fontSize = idealFontSize;
+            FontSize = idealFontSize;
 
-            float measuredTextWidth = Raylib.MeasureTextEx(Raylib.GetFontDefault(), "Restart", _fontSize, _textSpacing).X;
+            float measuredTextWidth = Raylib.MeasureTextEx(Raylib.GetFontDefault(), "Restart", FontSize, _textSpacing).X;
 
             float maxAllowedButtonWidth = sectionWidth * 0.90f; 
 
@@ -73,7 +73,7 @@ namespace MazeGen.ui.components {
                 // text does not fit in 95% 
                 _buttonWidth = maxAllowedButtonWidth;
                 float scaleFactor = maxAllowedButtonWidth / measuredTextWidth; 
-                _fontSize *= scaleFactor;
+                FontSize *= scaleFactor;
             }
         }
 
@@ -131,7 +131,7 @@ namespace MazeGen.ui.components {
 
             Button back = new Button(
                 backX, _panelY, _buttonWidth, _buttonHeight,
-                "Back", _fontSize, () => {
+                "Back", FontSize, () => {
                      _mazeWindow.Back();
                     if (_mazeWindow.IsRunning) {
                         _mazeWindow.IsRunning = false;
@@ -142,7 +142,7 @@ namespace MazeGen.ui.components {
 
             Button runStopRestart = new Button(
                 runStopX, _panelY, _buttonWidth, _buttonHeight,
-                "Run", _fontSize, () => {
+                "Run", FontSize, () => {
                     if (_mazeWindow.IsComplete) {
                         _mazeWindow.restartMaze();
                         _runStopRestartButton.Label = "Run";
@@ -165,7 +165,7 @@ namespace MazeGen.ui.components {
                 
             Button step = new Button(
                 stepX, _panelY, _buttonWidth, _buttonHeight,
-                "Step", _fontSize, () => {
+                "Step", FontSize, () => {
                     _mazeWindow.Step();
                     if (_mazeWindow.IsRunning) {
                         _mazeWindow.IsRunning = false;

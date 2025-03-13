@@ -35,10 +35,11 @@ namespace MazeGen.ui.components.screens {
         private int _mazeWidth;
         private int _mazeHeight;
 
-        private Button? _exitButton; 
+        private Button _exitButton; 
         private Action _onExitAction;
 
         public ScreenMaze(int windowWidth, int windowHeight, MazeLayout layout, Action onExitAction, int mazeWidth = 10, int mazeHeight = 10) {
+            _exitButton = null!;
             _mazeWindows = Array.Empty<MazeWindow>();
             _renderTextures = Array.Empty<RenderTexture2D>();
             _windowWidth = windowWidth;
@@ -56,7 +57,6 @@ namespace MazeGen.ui.components.screens {
                 MazeLayout.FourMazes => 4,
                 _ => 2
             };
-
             _mazeWindows = new MazeWindow[_mazeCount];
             _controlPanels = new ControlPanel[_mazeCount];
             _renderTextures = new RenderTexture2D[_mazeCount]; 
@@ -92,20 +92,7 @@ namespace MazeGen.ui.components.screens {
                 );
             }
             
-            float scaleFactor = 0.5f;
-            float exitButtonWidth = _controlPanels[0].Width / 3 * scaleFactor ;
-            float exitButtonHeight = _controlPanels[0].Height * scaleFactor;
-
-            _exitButton = new Button( 
-                MAZE_PADDING,
-                MAZE_PADDING,
-                exitButtonWidth,  
-                exitButtonHeight,
-                "Exit",
-                16,  // fontsize should not be a constant!!
-                _onExitAction
-            );
-
+            _exitButton = ExitButton();
             IsInitialized = true;
         }
 
@@ -218,17 +205,6 @@ namespace MazeGen.ui.components.screens {
                 _controlPanels[i].Update(mousePos);
                 _controlPanels[i].Draw();
             }
-
-            //     _exitButton.Rect = new Rectangle(
-            //         destRect.X + destRect.Width - _exitButton.Rect.Width - MAZE_PADDING,
-            //         destRect.Y + MAZE_PADDING, 
-            //         _exitButton.Rect.Width,
-            //         _exitButton.Rect.Height
-            //     );
-            //     _exitButton.Draw();
-            //     _exitButton.Update(mousePos);
-
-
         }
 
         private Rectangle[] CalculateDestRects() {
@@ -281,6 +257,29 @@ namespace MazeGen.ui.components.screens {
             }
 
             return destRects;
+        }
+
+        private Button ExitButton() {
+            float exitButtonScaleFactor = 0.7f;
+            string text = "Exit";
+
+            float fontSize = _controlPanels[0].FontSize;
+            float controlPanelButtonWidth = _controlPanels[0].Width / 3;
+        
+            Vector2 buttonTextSize = Raylib.MeasureTextEx(Raylib.GetFontDefault(), text, fontSize * exitButtonScaleFactor, 2);
+
+            float exitButtonHeight = (buttonTextSize.Y + MAZE_PADDING);
+            float exitButtonWidth = controlPanelButtonWidth * exitButtonScaleFactor;
+
+            return new Button(
+                _windowWidth - exitButtonWidth - MAZE_PADDING,
+                MAZE_PADDING,
+                exitButtonWidth,
+                exitButtonHeight,
+                text,
+                fontSize * exitButtonScaleFactor,
+                _onExitAction 
+            );
         }
 
 
