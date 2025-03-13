@@ -22,6 +22,7 @@ namespace MazeGen.ui.components.screens {
         private readonly int _windowHeight;
         private int _mazeCount;
         private const int MAZE_PADDING = 10;
+        private const int EXIT_BUTTON_PADDING = 40;
 
         const float CONTROL_PANE_HEIGHT_SCALE = 0.10f; 
        
@@ -34,12 +35,17 @@ namespace MazeGen.ui.components.screens {
         private int _mazeWidth;
         private int _mazeHeight;
 
-        public ScreenMaze(int windowWidth, int windowHeight, MazeLayout layout, int mazeWidth = 10, int mazeHeight = 10) {
+        private Button? _exitButton; 
+        private Action _onExitAction;
+
+        public ScreenMaze(int windowWidth, int windowHeight, MazeLayout layout, Action onExitAction, int mazeWidth = 10, int mazeHeight = 10) {
             _mazeWindows = Array.Empty<MazeWindow>();
             _renderTextures = Array.Empty<RenderTexture2D>();
             _windowWidth = windowWidth;
-            _windowHeight = windowHeight;   
+            _windowHeight = windowHeight - EXIT_BUTTON_PADDING;   
+            _onExitAction = onExitAction;
             CurrentLayout = layout;
+
 
             _mazeWidth = mazeWidth;
             _mazeHeight = mazeHeight;
@@ -85,6 +91,21 @@ namespace MazeGen.ui.components.screens {
                     _mazeWindows[i].Height + _controlPanels[i].Height
                 );
             }
+            
+            float scaleFactor = 0.5f;
+            float exitButtonWidth = _controlPanels[0].Width / 3 * scaleFactor ;
+            float exitButtonHeight = _controlPanels[0].Height * scaleFactor;
+
+            _exitButton = new Button( 
+                MAZE_PADDING,
+                MAZE_PADDING,
+                exitButtonWidth,  
+                exitButtonHeight,
+                "Exit",
+                16,  // fontsize should not be a constant!!
+                _onExitAction
+            );
+
             IsInitialized = true;
         }
 
@@ -156,6 +177,9 @@ namespace MazeGen.ui.components.screens {
                 Initialize();
             }
 
+            _exitButton.Update(mousePos); 
+            _exitButton.Draw();
+
             Rectangle[] destRects = CalculateDestRects();
 
             for (int i = 0; i < _mazeWindows.Length; i++) {
@@ -187,16 +211,12 @@ namespace MazeGen.ui.components.screens {
                    0f,
                    Color.White
                 );
-            }
-
-            // TODO: Find out if can be drawn in one of the other loops.
-            for (int i = 0; i < _controlPanels.Length; i++) {
-                _controlPanels[i].Position = new Vector2 ( 
+                _controlPanels[i].Position = new Vector2(
                     destRects[i].X,
                     destRects[i].Y + _mazeWindows[i].Height + 5 // 5 is padding between maze and control panel
                 );
                 _controlPanels[i].Update(mousePos);
-                _controlPanels[i].Draw(); 
+                _controlPanels[i].Draw();
             }
 
             //     _exitButton.Rect = new Rectangle(
@@ -225,7 +245,7 @@ namespace MazeGen.ui.components.screens {
                 int controlPanelPadding = 5;
                 int gridHeight = (totalHeightPerMaze * 2) + controlPanelPadding + (3 * MAZE_PADDING); // 2 rows, 1 gap
                 int startX = (_windowWidth - gridWidth) / 2;
-                int startY = (_windowHeight - gridHeight) / 2;
+                int startY = (_windowHeight - gridHeight) / 2 + EXIT_BUTTON_PADDING;
                 
                 
 
@@ -245,9 +265,9 @@ namespace MazeGen.ui.components.screens {
                 int paddingSpaces = _mazeWindows.Length + 1;
     
                 int gridWidth = (mazeWidth * _mazeWindows.Length) + (paddingSpaces * MAZE_PADDING); 
-                int gridHeight = totalHeightPerMaze + (2  * MAZE_PADDING); 
+                int gridHeight = totalHeightPerMaze + (2  * MAZE_PADDING); // 1 row, 1 gap
                 int startX = (_windowWidth - gridWidth) / 2;
-                int startY = (_windowHeight - gridHeight) / 2;
+                int startY = (_windowHeight - gridHeight) / 2 + EXIT_BUTTON_PADDING;
 
 
                 for (int i = 0; i < _mazeWindows.Length; i++) {

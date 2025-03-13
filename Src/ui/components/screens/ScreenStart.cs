@@ -58,7 +58,7 @@ namespace MazeGen.ui.components.screens {
             int dimy = (int)Math.Ceiling((float)_windowHeight / BACKGROUND_CELL_SIZE);
             _backgroundMaze = new Maze(dimx, dimy);
             _backgroundGenerator = new Backtracking(_backgroundMaze);
-            _mazeWindow = new MazeWindow(_backgroundMaze, BACKGROUND_CELL_SIZE, _backgroundGenerator, BACKGROUND_WALL_THICKNESS ,FRAMES_PER_STEP);
+            _mazeWindow = new MazeWindow(_backgroundMaze, BACKGROUND_CELL_SIZE, _backgroundGenerator, BACKGROUND_WALL_THICKNESS ,FRAMES_PER_STEP, autoRun: true);
         }
 
         public void Draw(Vector2 mousePos) {

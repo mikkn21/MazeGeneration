@@ -38,7 +38,7 @@ namespace MazeGen.ui.app {
 
             _instructionScreen = new ScreenInstruction(_windowWidth, _windowHeight, () => _currentScreen = Screen.Start);
             _startScreen = new ScreenStart(_windowWidth, _windowHeight, () => _currentScreen = Screen.Maze, () => _currentScreen = Screen.Instruction, () => Debug.WriteLine("Settings clicked"));
-            _mazeScreen = new ScreenMaze(_windowWidth, _windowHeight, MazeLayout.OneMaze);
+            _mazeScreen = new ScreenMaze(_windowWidth, _windowHeight,  MazeLayout.OneMaze, () => _currentScreen = Screen.Start);
         }
 
         private void InitializeRenderTextures() {
@@ -67,7 +67,7 @@ namespace MazeGen.ui.app {
 
 
                 // TODO: REMOVE FOR DEBUG: 
-                _currentScreen = Screen.Maze;
+                // _currentScreen = Screen.Maze;
                 
                 switch (_currentScreen) {
                     case Screen.Start:

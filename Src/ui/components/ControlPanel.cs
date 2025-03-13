@@ -19,8 +19,6 @@ namespace MazeGen.ui.components {
         public event Action? OnReset;
 
         private float _fontSize;
-        private float _fontSize2;
-        private float _measuredTextWidth;
         private float _panelY;
         private float _buttonWidth;
         private float  _buttonHeight;
@@ -39,15 +37,8 @@ namespace MazeGen.ui.components {
             _buttonHeight = Height;
             ScaleFontSizeAndButtonWidth();
 
-
             (_backButton, _runStopRestartButton, _stepButton) = InitButtons();
     
-        }
-
-        public void debug() {
-           Console.WriteLine($"buttonWidth = {_buttonWidth}, measuredWidth = {_measuredTextWidth}");
-           Console.WriteLine($"fontSize1 = {_fontSize}, fontSize2 = {_fontSize2}");
-           Console.WriteLine($"BackButtonWidth = {_backButton.Width}, RunStopWidth = {_runStopRestartButton.Width}, StepWidth = {_stepButton.Width}");
         }
         
         public void Update(Vector2 mousePos) {
@@ -67,25 +58,23 @@ namespace MazeGen.ui.components {
             float idealFontSize = tagetButtonWidth * 0.20f;
             _fontSize = idealFontSize;
 
-            _measuredTextWidth = Raylib.MeasureTextEx(Raylib.GetFontDefault(), "Restart", _fontSize, _textSpacing).X;
+            float measuredTextWidth = Raylib.MeasureTextEx(Raylib.GetFontDefault(), "Restart", _fontSize, _textSpacing).X;
 
             float maxAllowedButtonWidth = sectionWidth * 0.90f; 
 
 
-            if (_measuredTextWidth <= tagetButtonWidth) { 
+            if (measuredTextWidth <= tagetButtonWidth) { 
                 _buttonWidth = tagetButtonWidth; // text fits 
             }
-            else if (_measuredTextWidth <= maxAllowedButtonWidth) {
-                _buttonWidth = _measuredTextWidth; // text needs more space, but it can fit within 95%
+            else if (measuredTextWidth <= maxAllowedButtonWidth) {
+                _buttonWidth = measuredTextWidth; // text needs more space, but it can fit within 95%
             }
             else {
                 // text does not fit in 95% 
                 _buttonWidth = maxAllowedButtonWidth;
-                float scaleFactor = maxAllowedButtonWidth / _measuredTextWidth; 
-                _fontSize = _fontSize * scaleFactor;
+                float scaleFactor = maxAllowedButtonWidth / measuredTextWidth; 
+                _fontSize *= scaleFactor;
             }
-
-            _fontSize2 = idealFontSize;
         }
 
         private void UpdateButttonStates() {
@@ -177,7 +166,6 @@ namespace MazeGen.ui.components {
             Button step = new Button(
                 stepX, _panelY, _buttonWidth, _buttonHeight,
                 "Step", _fontSize, () => {
-                    debug(); 
                     _mazeWindow.Step();
                     if (_mazeWindow.IsRunning) {
                         _mazeWindow.IsRunning = false;
