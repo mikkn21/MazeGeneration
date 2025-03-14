@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Numerics;
+using MazeGen.ui.components;
 using MazeGen.ui.components.screens;
 using Raylib_cs;
 
@@ -7,6 +8,7 @@ namespace MazeGen.ui.app {
 
     public enum Screen {
         Start,
+        Settings,
         Instruction, 
         Maze
     }
@@ -25,6 +27,7 @@ namespace MazeGen.ui.app {
         private const int MAZE_PADDING = 10;
 
         private IScreen _instructionScreen;
+        private IScreen _settingsScreen;
         private IScreen _startScreen;
 
         private IScreen _mazeScreen;
@@ -37,8 +40,10 @@ namespace MazeGen.ui.app {
             _windowHeight = _mazeWindows[0].Height + (2 * MAZE_PADDING);
 
             _instructionScreen = new ScreenInstruction(_windowWidth, _windowHeight, () => _currentScreen = Screen.Start);
-            _startScreen = new ScreenStart(_windowWidth, _windowHeight, () => _currentScreen = Screen.Maze, () => _currentScreen = Screen.Instruction, () => Debug.WriteLine("Settings clicked"));
-            _mazeScreen = new ScreenMaze(_windowWidth, _windowHeight,  MazeLayout.OneMaze, () => _currentScreen = Screen.Start);
+            _settingsScreen = new ScreenSettings(_windowWidth, _windowHeight, () => _currentScreen = Screen.Start);
+            _startScreen = new ScreenStart(_windowWidth, _windowHeight, () => _currentScreen = Screen.Maze, () => _currentScreen = Screen.Instruction, () => _currentScreen = Screen.Settings);
+            MazeSettings defaultSettings = new MazeSettings();
+            _mazeScreen = new ScreenMaze(_windowWidth, _windowHeight, () => _currentScreen = Screen.Start, defaultSettings);
         }
 
         private void InitializeRenderTextures() {
@@ -72,6 +77,9 @@ namespace MazeGen.ui.app {
                 switch (_currentScreen) {
                     case Screen.Start:
                         _startScreen.Draw(mousePos);
+                        break;
+                    case Screen.Settings: 
+                        _settingsScreen.Draw(mousePos);
                         break;
                     case Screen.Instruction:
                         _instructionScreen.Draw(mousePos);

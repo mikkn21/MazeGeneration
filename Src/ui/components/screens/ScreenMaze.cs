@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Numerics;
 using MazeGen.Algorithms;
 using MazeGen.maze;
@@ -34,22 +35,24 @@ namespace MazeGen.ui.components.screens {
 
         private int _mazeWidth;
         private int _mazeHeight;
+        private int _framesPerStep;
 
         private Button _exitButton; 
         private Action _onExitAction;
 
-        public ScreenMaze(int windowWidth, int windowHeight, MazeLayout layout, Action onExitAction, int mazeWidth = 10, int mazeHeight = 10) {
+        public ScreenMaze(int windowWidth, int windowHeight, Action onExitAction, MazeSettings settings ) {
             _exitButton = null!;
             _mazeWindows = Array.Empty<MazeWindow>();
             _renderTextures = Array.Empty<RenderTexture2D>();
             _windowWidth = windowWidth;
             _windowHeight = windowHeight - EXIT_BUTTON_PADDING;   
             _onExitAction = onExitAction;
-            CurrentLayout = layout;
+            CurrentLayout = settings.Layout;
+            _framesPerStep = settings.FramesPerSecond;
 
 
-            _mazeWidth = mazeWidth;
-            _mazeHeight = mazeHeight;
+            _mazeWidth = settings.Width;
+            _mazeHeight = settings.Height;
             _mazeCount = CurrentLayout switch {
                 MazeLayout.OneMaze => 1,
                 MazeLayout.TwoMazes => 2,
@@ -80,8 +83,7 @@ namespace MazeGen.ui.components.screens {
                     cellSize, 
                     generator,
                     wallThickness, 
-                    1
-                    // 5 // TODO: The frames per step should be an argument to the constructor 
+                    _framesPerStep
                 );
 
                 _controlPanels[i] = new ControlPanel(_mazeWindows[i], _mazeWindows[i].Width, _controlPanelHeight);
