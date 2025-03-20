@@ -19,7 +19,6 @@ namespace MazeGen.ui.components {
         public event Action? OnReset;
 
         public float FontSize { get; private set; }
-        private float _panelY;
         private float _buttonWidth;
         private float  _buttonHeight;
         private Button _backButton;
@@ -130,7 +129,7 @@ namespace MazeGen.ui.components {
             float stepX = positions.stepX;
 
             Button back = new Button(
-                backX, _panelY, _buttonWidth, _buttonHeight,
+                backX, 0, _buttonWidth, _buttonHeight,
                 "Back", FontSize, () => {
                      _mazeWindow.Back();
                     if (_mazeWindow.IsRunning) {
@@ -141,7 +140,7 @@ namespace MazeGen.ui.components {
             );
 
             Button runStopRestart = new Button(
-                runStopX, _panelY, _buttonWidth, _buttonHeight,
+                runStopX, 0, _buttonWidth, _buttonHeight,
                 "Run", FontSize, () => {
                     if (_mazeWindow.IsComplete) {
                         _mazeWindow.restartMaze();
@@ -164,7 +163,7 @@ namespace MazeGen.ui.components {
             );
                 
             Button step = new Button(
-                stepX, _panelY, _buttonWidth, _buttonHeight,
+                stepX, 0, _buttonWidth, _buttonHeight,
                 "Step", FontSize, () => {
                     _mazeWindow.Step();
                     if (_mazeWindow.IsRunning) {

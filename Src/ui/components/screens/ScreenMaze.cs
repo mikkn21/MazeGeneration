@@ -66,13 +66,40 @@ namespace MazeGen.ui.components.screens {
         
         }
 
+        public void UpdateSettings(MazeSettings settings) {
+            CurrentLayout = settings.Layout;
+            _framesPerStep = settings.FramesPerSecond;
+            _mazeWidth = settings.Width;
+            _mazeHeight = settings.Height;
+
+            _mazeCount = CurrentLayout switch {
+                MazeLayout.OneMaze => 1,
+                MazeLayout.TwoMazes => 2,
+                MazeLayout.ThreeMazes => 3,
+                MazeLayout.FourMazes => 4,
+                _ => 2
+            };
+
+            Cleanup(); 
+
+            _mazeWindows = new MazeWindow[_mazeCount];
+            _controlPanels = new ControlPanel[_mazeCount];
+            _renderTextures = new RenderTexture2D[_mazeCount];
+
+            IsInitialized = false; // Let the next Draw call reinitialize
+        }
+
+
         public void Initialize() {
             _controlPanelHeight = CalculateControlPanelHeight();
             int cellSize = CalculateCellSize(_mazeWidth, _mazeHeight);
+
             
-            int wallThickness = Math.Max(1, cellSize / 10); // Proportional to cell size
+            int smallestDim = Math.Min(_mazeWidth, _mazeHeight);
+            int wallThickness = Math.Max(1, cellSize / smallestDim );
 
-
+        
+           
             for (int i = 0; i < _mazeCount; i++) {
                 Maze maze = new Maze (_mazeWidth, _mazeHeight); 
 

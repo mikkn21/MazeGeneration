@@ -94,6 +94,7 @@ namespace MazeGen.ui.app {
 
             }
             _mazeScreen.Cleanup();
+            _settingsScreen.Cleanup();
             Raylib.CloseWindow();
         }       
     }
