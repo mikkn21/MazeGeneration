@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Runtime.InteropServices;
 using MazeGen.maze;
 using Raylib_cs;
 
@@ -32,8 +33,10 @@ namespace MazeGen.ui.components.screens {
                 _windowHeight
             );
 
-            _vSpace = Math.Clamp(_settingsWindow.Width* 0.02f, 5, 30); // TODO: Check clamp values
-            _hSpace = Math.Clamp(_settingsWindow.Height* 0.02f, 5, 30); // TODO: Check clamp values
+            _selectedLayout = MazeLayout.TwoMazes;
+
+            _vSpace = Math.Clamp(_settingsWindow.Width* 0.02f, 5, 30); 
+            _hSpace = Math.Clamp(_settingsWindow.Height* 0.02f, 5, 30); 
             _fontSize = Math.Clamp(_settingsWindow.Width * 0.03f, 12, 30);    
 
         }
@@ -92,7 +95,7 @@ namespace MazeGen.ui.components.screens {
         private float DrawLayoutSection(float currentY, Vector2 mousePos, int titleFontSize) {
 
             string layoutSectionTitle = "Layout:";
-            int sectionFontSize = Math.Clamp((int)(titleFontSize * 0.70f), 12, 50); // TODO: Maybe have this scale with windowWidth of the section titel
+            int sectionFontSize = Math.Clamp((int)(titleFontSize * 0.70f), 12, 50); 
             Vector2 sectionTitleSize = Raylib.MeasureTextEx(Raylib.GetFontDefault(), layoutSectionTitle, sectionFontSize, _textSpacing);
 
             Raylib.DrawTextEx(
@@ -106,38 +109,55 @@ namespace MazeGen.ui.components.screens {
             );
             currentY += sectionTitleSize.Y + _hSpace;
 
-            float startX = _settingsWindow.X + _vSpace; 
-            float prewviewWidth = (_settingsWindow.Width - ( 5 * _vSpace )) / 4 ; // 5 spaces for 4 previews 
+            
+            string[] layoutNames = Enum.GetNames(typeof(MazeLayout));
+            string longestName = layoutNames.OrderByDescending(name => name.Length).First();
+
+            float labelFontSize = Math.Clamp(sectionFontSize * 0.45f, 8, 20); // Labels are 45% of the section font size
+
+            Vector2 longestTextSize = Raylib.MeasureTextEx(Raylib.GetFontDefault(), longestName, labelFontSize, _textSpacing);
+
+            float previewWidth = longestTextSize.X * 1.1f;
+            float availableWidth = _settingsWindow.Width - (2 * _vSpace);
+        
+            float totalPreviewsWidth = 4 * previewWidth;
+            float remainingSpace = availableWidth - totalPreviewsWidth;
+            float spacing = Math.Clamp(remainingSpace / 3, 10, 35); 
+
+            
+            // Center the layout options
+            float totalWidth = (4 * previewWidth) + (3 * spacing);
+            float startX = _settingsWindow.X + _vSpace +  (_settingsWindow.Width - totalWidth) / 2;
             
             for (int i = 0; i < 4; i++) {
                 MazeLayout layout = (MazeLayout)i;
-                float x = startX + i * ( prewviewWidth + _vSpace);
+                float x = startX + i * ( previewWidth +  spacing);
                 bool isSelected = layout == _selectedLayout;
 
-                // TODO: Make a better height calculation
-                _previewManager!.DrawLayoutOption(layout, x, currentY, prewviewWidth, prewviewWidth, isSelected);
+                _previewManager!.DrawLayoutOption(layout, x, currentY, previewWidth, previewWidth, isSelected);
 
                 string layoutName = layout.ToString();
-                Vector2 textSize = Raylib.MeasureTextEx(Raylib.GetFontDefault(), layoutName, _fontSize, _textSpacing);
-                float textX = x + (prewviewWidth - textSize.X) / 2;
-                float textY = currentY + prewviewWidth + _hSpace;
+                Vector2 textSize = Raylib.MeasureTextEx(Raylib.GetFontDefault(), layoutName, labelFontSize, _textSpacing);
+                
+                float textX = x + (previewWidth - textSize.X) / 2;
+                float textY = currentY + previewWidth + _hSpace;
 
                 Raylib.DrawTextEx(
                     Raylib.GetFontDefault(),
                     layoutName,
                     new Vector2(textX, textY),
-                    _fontSize * 0.8f,
+                    labelFontSize,
                     _textSpacing,
                     Color.Black
                 );
 
-                Rectangle layoutRect = new Rectangle(x, currentY, prewviewWidth, prewviewWidth);
+                Rectangle layoutRect = new Rectangle(x, currentY, previewWidth, previewWidth);
                 if (Raylib.CheckCollisionPointRec(mousePos, layoutRect) && Raylib.IsMouseButtonPressed(MouseButton.Left)) {
                     _selectedLayout = layout;
                 }
             }
 
-            return currentY + prewviewWidth; 
+            return currentY + previewWidth;
 
         }
 
