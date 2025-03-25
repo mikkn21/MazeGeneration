@@ -14,7 +14,7 @@ namespace MazeGen.ui.components.screens {
     }
 
 
-    public class ScreenMaze : IScreen {
+    public class ScreenMaze : IScreen, IDisposable {
 
         private MazeWindow[] _mazeWindows;
         private ControlPanel[] _controlPanels;
@@ -40,19 +40,26 @@ namespace MazeGen.ui.components.screens {
         private Button _exitButton; 
         private Action _onExitAction;
 
-        public ScreenMaze(int windowWidth, int windowHeight, Action onExitAction, MazeSettings settings ) {
+        private bool _disposed = false;
+        private MazeSettingsModel _settingsManager;
+
+        public ScreenMaze(int windowWidth, int windowHeight, Action onExitAction, MazeSettingsModel settingsManager ) {
             _exitButton = null!;
             _mazeWindows = Array.Empty<MazeWindow>();
             _renderTextures = Array.Empty<RenderTexture2D>();
             _windowWidth = windowWidth;
             _windowHeight = windowHeight - EXIT_BUTTON_PADDING;   
             _onExitAction = onExitAction;
-            CurrentLayout = settings.Layout;
-            _framesPerStep = settings.FramesPerSecond;
+
+            _settingsManager = settingsManager;
+            CurrentLayout = settingsManager.Settings.Layout;
+            _framesPerStep = settingsManager.Settings.FramesPerSecond;
+            _mazeWidth = settingsManager.Settings.Width;
+            _mazeHeight = settingsManager.Settings.Height;
+
+            _settingsManager.SettingsChanged += OnSettingsChanged;
 
 
-            _mazeWidth = settings.Width;
-            _mazeHeight = settings.Height;
             _mazeCount = CurrentLayout switch {
                 MazeLayout.OneMaze => 1,
                 MazeLayout.TwoMazes => 2,
@@ -97,7 +104,6 @@ namespace MazeGen.ui.components.screens {
             
             int smallestDim = Math.Min(_mazeWidth, _mazeHeight);
             int wallThickness = Math.Max(1, cellSize / smallestDim );
-
         
            
             for (int i = 0; i < _mazeCount; i++) {
@@ -318,7 +324,29 @@ namespace MazeGen.ui.components.screens {
             }
         }
 
+        private void OnSettingsChanged(object? sender, MazeSettingsChangedEventArgs e)        {
+            UpdateSettings(e.NewSettings);
+        }
 
 
+
+        // Unscubscribe from events
+        public void Dispose() {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing) {
+            if (_disposed) {
+                return;
+            }
+
+            if (disposing) {
+                _settingsManager.SettingsChanged -= OnSettingsChanged;
+                Cleanup();
+
+            }
+            _disposed = true;
+        }
     }
 }

@@ -32,7 +32,7 @@ namespace MazeGen.ui
 
         
 
-        public MazeWindow(Maze maze, int cellSize, IGenerator generator, int wallThickness = 3, int framesPerStep = 1, bool autoRun = false){
+        public MazeWindow(Maze maze, int cellSize, IGenerator generator, int wallThickness = 1, int framesPerStep = 1, bool autoRun = false){
             _maze = maze;
             _cellSize = cellSize;
             _wallThickness = wallThickness;

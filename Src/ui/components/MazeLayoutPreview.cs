@@ -1,3 +1,4 @@
+using System;
 using System.Numerics;
 using MazeGen.Algorithms;
 using MazeGen.maze;
@@ -19,21 +20,17 @@ namespace MazeGen.ui.components {
         private readonly Dictionary<MazeLayout, RenderTexture2D> _layoutTextures;
         private readonly int _cellSize;
         private int _wallThickness;
+        private Random _Random;
 
         public MazeLayoutPreview(int previewWidth, int previewHeight) {
             _previewWidth = previewWidth;
             _previewHeight = previewHeight;
             _layoutTextures = new Dictionary<MazeLayout, RenderTexture2D>();
             _cellSize = CalculateCellSize();
+            _Random = new Random();
 
             int smallestDim = Math.Min(_mazeWidth, _mazeHeight);
             _wallThickness = Math.Max(1, _cellSize / smallestDim);
-            // TODO  wallthickness is too thick
-
-            _wallThickness = Math.Max(1, Math.Min(_wallThickness, _cellSize / 3));
-
-            _wallThickness = 1;
-
 
             GenerateLayoutPreviews();
         }
@@ -71,7 +68,9 @@ namespace MazeGen.ui.components {
                 IGenerator generator = new Backtracking(maze);
                 
                 // Run a few steps to make the maze look partially complete
-                for (int step = 0; step < 5; step++) {
+                int gridSize = _mazeWidth * _mazeHeight;
+                int maxStep = _Random.Next(0, gridSize * 2);
+                for (int step = 0; step < maxStep; step++) {
                     generator.Step();
                 }
                 
@@ -145,10 +144,11 @@ namespace MazeGen.ui.components {
             
             Rectangle dest = new Rectangle(x, y, width, height);
             
-            // Draw selection border if selected
+            
             if (isSelected) {
                 Rectangle borderRect = new Rectangle(x - 2, y - 2, width + 4, height + 4);
-                Raylib.DrawRectangleLinesEx(borderRect, 2, Color.SkyBlue);
+                Raylib.DrawRectangleLinesEx(borderRect, 2, Color.Green);
+                
             }
             
             Raylib.DrawTexturePro(

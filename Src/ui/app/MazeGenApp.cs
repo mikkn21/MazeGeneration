@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Numerics;
 using MazeGen.ui.components;
@@ -13,7 +14,7 @@ namespace MazeGen.ui.app {
         Maze
     }
 
-    public class MazeGenApp {
+    public class MazeGenApp : IDisposable {
         private readonly int _windowWidth;
         private readonly int _windowHeight;
         private readonly MazeWindow[] _mazeWindows;
@@ -30,7 +31,10 @@ namespace MazeGen.ui.app {
         private IScreen _settingsScreen;
         private IScreen _startScreen;
 
-        private IScreen _mazeScreen;
+        private ScreenMaze _mazeScreen;
+
+        private bool _disposed = false;
+        private MazeSettingsModel _settingsManager;
 
         public MazeGenApp(MazeWindow[] mazeDraws) {
             _mazeWindows = mazeDraws;
@@ -39,11 +43,17 @@ namespace MazeGen.ui.app {
             _windowWidth = (_mazeWindows[0].Width * mazeDraws.Length) + (MAZE_PADDING * (mazeDraws.Length + 1)); // +1 for the outer edges
             _windowHeight = _mazeWindows[0].Height + (2 * MAZE_PADDING);
 
-            _instructionScreen = new ScreenInstruction(_windowWidth, _windowHeight, () => _currentScreen = Screen.Start);
-            _settingsScreen = new ScreenSettings(_windowWidth, _windowHeight, () => _currentScreen = Screen.Start);
-            _startScreen = new ScreenStart(_windowWidth, _windowHeight, () => _currentScreen = Screen.Maze, () => _currentScreen = Screen.Instruction, () => _currentScreen = Screen.Settings);
             MazeSettings defaultSettings = new MazeSettings();
-            _mazeScreen = new ScreenMaze(_windowWidth, _windowHeight, () => _currentScreen = Screen.Start, defaultSettings);
+            _settingsManager = new MazeSettingsModel(defaultSettings);
+
+            _settingsManager.SettingsChanged += OnSettingsChanged;
+
+            _instructionScreen = new ScreenInstruction(_windowWidth, _windowHeight, () => _currentScreen = Screen.Start);
+            _mazeScreen = new ScreenMaze(_windowWidth, _windowHeight, () => _currentScreen = Screen.Start, _settingsManager);
+            _settingsScreen = new ScreenSettings(_windowWidth, _windowHeight, () => _currentScreen = Screen.Start , _settingsManager);
+
+            _startScreen = new ScreenStart(_windowWidth, _windowHeight, () => _currentScreen = Screen.Maze, () => _currentScreen = Screen.Instruction, () => _currentScreen = Screen.Settings);
+            
         }
 
         private void InitializeRenderTextures() {
@@ -93,9 +103,39 @@ namespace MazeGen.ui.app {
                 Raylib.EndDrawing();
 
             }
-            _mazeScreen.Cleanup();
-            _settingsScreen.Cleanup();
+
+            this.Dispose();
             Raylib.CloseWindow();
         }       
+
+
+        private void OnSettingsChanged(object? sender, MazeSettingsChangedEventArgs e) {
+            _mazeScreen.UpdateSettings(e.NewSettings);
+        }
+
+
+        // Unsubscribe from events and dispose of resources
+        public void Dispose() {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing) {
+            if (_disposed) {
+                return;
+            }
+
+            if (disposing) {
+                _settingsManager.SettingsChanged -= OnSettingsChanged;
+
+                if (_mazeScreen is IDisposable disposableMaze) {
+                    disposableMaze.Dispose();
+                }
+
+                _settingsScreen.Cleanup(); 
+            }
+
+            _disposed = true;
+        }
     }
 }

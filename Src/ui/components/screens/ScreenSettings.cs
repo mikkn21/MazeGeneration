@@ -8,6 +8,8 @@ namespace MazeGen.ui.components.screens {
     public class ScreenSettings : IScreen {
 
         public bool IsInitialized { get; private set; } = false;
+        // public MazeSettings CurrentSettings;
+
         private float _windowWidth;
         private float _windowHeight;
         private Action _onExitAction;
@@ -19,8 +21,12 @@ namespace MazeGen.ui.components.screens {
 
         private MazeLayoutPreview? _previewManager; 
         private MazeLayout _selectedLayout;
+
+        MazeSettingsModel _settingsManager;
         
-        public ScreenSettings(int parentWindowWidth, int parentWindowHeight, Action onExitAction) {
+        
+        
+        public ScreenSettings(int parentWindowWidth, int parentWindowHeight, Action onExitAction, MazeSettingsModel settingsManager) {
             _windowWidth = parentWindowWidth * 0.90f;
             _windowHeight = parentWindowHeight * 0.90f;
 
@@ -33,14 +39,14 @@ namespace MazeGen.ui.components.screens {
                 _windowHeight
             );
 
-            _selectedLayout = MazeLayout.TwoMazes;
+            _settingsManager = settingsManager;
+            _selectedLayout = _settingsManager.Settings.Layout;
 
             _vSpace = Math.Clamp(_settingsWindow.Width* 0.02f, 5, 30); 
             _hSpace = Math.Clamp(_settingsWindow.Height* 0.02f, 5, 30); 
             _fontSize = Math.Clamp(_settingsWindow.Width * 0.03f, 12, 30);    
 
         }
-
 
         public void Initialize(){
             IsInitialized = true;
@@ -154,6 +160,12 @@ namespace MazeGen.ui.components.screens {
                 Rectangle layoutRect = new Rectangle(x, currentY, previewWidth, previewWidth);
                 if (Raylib.CheckCollisionPointRec(mousePos, layoutRect) && Raylib.IsMouseButtonPressed(MouseButton.Left)) {
                     _selectedLayout = layout;
+                    _settingsManager.UpdateSettings(new MazeSettings(
+                        layout,
+                        _settingsManager.Settings.Width,
+                        _settingsManager.Settings.Height,
+                        _settingsManager.Settings.FramesPerSecond
+                    )); 
                 }
             }
 
