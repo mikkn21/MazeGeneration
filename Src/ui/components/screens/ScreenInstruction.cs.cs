@@ -40,6 +40,9 @@ namespace MazeGen.ui.components.screens {
                 (Color.Red, "The current tile the algorithm is working on")
         };
 
+
+        // TODO: The description text does not wrap if it is too long 
+        // TODO: Remember to move the text up (i.e., not center) if it wraps
         
         public ScreenInstruction(int parentWindowWidth, int parentWindowHeight, Action onExitAction) {
             _windowWidth = parentWindowWidth * 0.9f;
