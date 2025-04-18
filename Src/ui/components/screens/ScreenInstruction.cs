@@ -6,9 +6,6 @@ namespace MazeGen.ui.components.screens {
 
         public bool IsInitialized { get; private set; } = false;
         
-        private float _instructionScrollY = 0;
-        private float _totalInstructionContentHeight = 0;
-
         private readonly float _windowWidth;
         private readonly float _windowHeight;
         private readonly Rectangle _instructionWindow;
@@ -23,6 +20,8 @@ namespace MazeGen.ui.components.screens {
 
         private bool _isDraggingScrollbar = false;
         private float _scrollbarDragOffset = 0;
+        private float _instructionScrollY = 0;
+        private float _totalInstructionContentHeight = 0;
 
 
         private readonly (string label, string desc)[] _buttons = new (string label, string desc)[] {
@@ -41,9 +40,6 @@ namespace MazeGen.ui.components.screens {
         };
 
 
-        // TODO: The description text does not wrap if it is too long 
-        // TODO: Remember to move the text up (i.e., not center) if it wraps
-        
         public ScreenInstruction(int parentWindowWidth, int parentWindowHeight, Action onExitAction) {
             _windowWidth = parentWindowWidth * 0.9f;
             _windowHeight = parentWindowHeight * 0.9f;
@@ -68,7 +64,7 @@ namespace MazeGen.ui.components.screens {
             if (!IsInitialized) {
                 Initialize();
             }
-
+            
 
             // Transparrent color for the window 
             Color transColor = new Color(200, 200, 200, 240);
@@ -89,62 +85,15 @@ namespace MazeGen.ui.components.screens {
             float currentY = _instructionWindow.Y + _hSpace + _instructionScrollY;
             float startY = currentY;
 
-            // Draw title
-            string title = "Instructions";
-            int titleFontSize = Math.Clamp((int)(_instructionWindow.Width * 0.05f), 20, 70);   
-            Vector2 titleSize = Raylib.MeasureTextEx(Raylib.GetFontDefault(), title, titleFontSize, _textSpacing);
-            float titleX = _instructionWindow.X + (_instructionWindow.Width - titleSize.X) / 2;
-            Raylib.DrawTextEx(
-                Raylib.GetFontDefault(),
-                title,
-                new Vector2(titleX, currentY),
-                titleFontSize,
-                _textSpacing,
-                Color.White
-            );
-
-            // underline title 
-            Vector2 startPos = new Vector2(titleX, currentY + titleSize.Y);
-            Vector2 endPos = new Vector2(titleX + titleSize.X, currentY + titleSize.Y);
-            Raylib.DrawLineEx(startPos, endPos, 2, Color.Black);
-
-            currentY += titleSize.Y + _hSpace;
-
-            // Draw instruction button section
-            string buttonSectionTitle = "Buttons:";
-            int sectionFontSize = Math.Clamp((int)(titleFontSize * 0.70f), 12, 50); // TODO: Maybe have this scale with windowWidth of the section titel
-            Vector2 buttonSectionSize = Raylib.MeasureTextEx(Raylib.GetFontDefault(), buttonSectionTitle, sectionFontSize, _textSpacing);
-
-            Raylib.DrawTextEx(
-                Raylib.GetFontDefault(),
-                buttonSectionTitle,
-                new Vector2(_instructionWindow.X + _vSpace, currentY),
-                sectionFontSize,
-                _textSpacing,
-                Color.Black
-
-            );
-            currentY += buttonSectionSize.Y + _hSpace;  
-
+   
+            int titleFontSize = DrawTitleAndAdvance(ref currentY, "Instructions", _instructionWindow.Width, true);
+   
+            DrawTitleAndAdvance(ref currentY, "Buttons:", titleFontSize, false);
             foreach (var (label, desc) in _buttons) {
                 currentY = ButtonWithDesc(label, desc, currentY);
             }
 
-
-            // Draw instruction tile section 
-            string tileSectionTitle = "Tiles:";
-            Vector2 tileSectionSize = Raylib.MeasureTextEx(Raylib.GetFontDefault(), tileSectionTitle, sectionFontSize, _textSpacing);
-
-            Raylib.DrawTextEx(
-                Raylib.GetFontDefault(),
-                tileSectionTitle,
-                new Vector2(_instructionWindow.X + _vSpace, currentY),
-                sectionFontSize,
-                _textSpacing,
-                Color.Black
-            );
-            currentY += tileSectionSize.Y + _hSpace;
-            
+            DrawTitleAndAdvance(ref currentY, "Tiles:", titleFontSize, false);
             foreach (var (color, desc) in _tiles) {
                 currentY = TileWithDesc(color, desc, currentY);
             }
@@ -164,6 +113,7 @@ namespace MazeGen.ui.components.screens {
 
         }
 
+        
         public void Initialize() {
             float maxTextWidth = _buttons.Max(b => Raylib.MeasureTextEx(Raylib.GetFontDefault(), b.label, _fontSize, _textSpacing).X);
             _buttonWidth = maxTextWidth + _vSpace;
@@ -173,6 +123,45 @@ namespace MazeGen.ui.components.screens {
             _buttonWidth = Math.Min(Math.Max(_buttonWidth, minButtonWidth), maxButtonWidth);
             IsInitialized = true;
         }
+
+        // Helper method for drawing a title and advancing the currentY
+        // Returns the fontsize of the title used to scale other elements
+        private int DrawTitleAndAdvance(ref float currentY, string title, float scaleElement, bool isWindowTitle = false) {
+            var (height, fontSize) = DrawTitle(currentY, title, scaleElement, isWindowTitle);
+            currentY += height + _hSpace;
+            return fontSize; 
+        }
+
+        private (float height, int fontSize) DrawTitle(float currentY, string title, float scaleElement , bool isWindowTitle = false ) {
+            
+            int fontSize = isWindowTitle ? 
+                Math.Clamp((int)(scaleElement * 0.05f), 20, 70) : 
+                Math.Clamp((int)(scaleElement * 0.70), 12, 50);
+
+            Vector2 textSize = Raylib.MeasureTextEx(Raylib.GetFontDefault(), title, fontSize, _textSpacing);
+
+            
+            float textX = isWindowTitle ?
+                    _instructionWindow.X + (_instructionWindow.Width - textSize.X) / 2 :  // Center for window title
+                    _instructionWindow.X + _vSpace;
+
+            Raylib.DrawTextEx(
+                Raylib.GetFontDefault(),
+                title,
+                new Vector2(textX, currentY),
+                fontSize,
+                _textSpacing,
+                isWindowTitle ? Color.White : Color.Black
+            );
+            if (isWindowTitle) { // underline title
+                Vector2 startPos = new Vector2(textX, currentY + textSize.Y);
+                Vector2 endPos = new Vector2(textX + textSize.X, currentY + textSize.Y);
+                Raylib.DrawLineEx(startPos, endPos, 2, Color.Black);
+            }
+
+            return (textSize.Y, fontSize);
+        }
+
 
         private float TileWithDesc(Color color, string desc, float currentY) {
             Vector2 descSize = Raylib.MeasureTextEx(Raylib.GetFontDefault(), desc, _fontSize, _textSpacing);
@@ -277,24 +266,6 @@ namespace MazeGen.ui.components.screens {
                 scaledFontSize,
                 _onExitAction
             );
-
-            // float exitButtonScaleFactor = 0.6f;
-            // string text = "Exit";
-
-            // Vector2 buttonTextSize = Raylib.MeasureTextEx(Raylib.GetFontDefault(), text, _fontSize * exitButtonScaleFactor, _textSpacing);
-
-            // float exitButtonHeight = (buttonTextSize.Y + _vSpace) * exitButtonScaleFactor;
-            // float exitButtonWidth = _buttonWidth * exitButtonScaleFactor;
-
-            // return new Button(
-            //     _instructionWindow.X + _instructionWindow.Width - _vSpace - exitButtonWidth,
-            //     _instructionWindow.Y + _hSpace+ _instructionScrollY,
-            //     exitButtonWidth,
-            //     exitButtonHeight,
-            //     text,
-            //     _fontSize * exitButtonScaleFactor,
-            //     _onExitAction
-            // );
         }
 
         private void ScrollBar(Vector2 mousePos) {
