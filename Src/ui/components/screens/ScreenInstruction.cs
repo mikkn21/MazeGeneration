@@ -58,7 +58,6 @@ namespace MazeGen.ui.components.screens {
 
             _vSpace = Math.Clamp(_instructionWindow.Width * 0.02f, 5, 30); // TODO: Check clamp values
             _hSpace = Math.Clamp(_instructionWindow.Height * 0.02f, 5, 30); // TODO: Check clamp values
-
             _fontSize = Math.Clamp(_instructionWindow.Width * 0.03f, 12, 30); // font size for buttons and descriptions
 
           
@@ -248,23 +247,54 @@ namespace MazeGen.ui.components.screens {
 
 
         private Button ExitButton() {
-            float exitButtonScaleFactor = 0.6f;
             string text = "Exit";
 
-            Vector2 buttonTextSize = Raylib.MeasureTextEx(Raylib.GetFontDefault(), text, _fontSize * exitButtonScaleFactor, _textSpacing);
+            float targetWidth = _instructionWindow.Width * 0.1f;
+            float targetHeight = _instructionWindow.Height * 0.08f;
+            float initialFontSize = _fontSize * 0.6f;
+            Vector2 textSize = Raylib.MeasureTextEx(Raylib.GetFontDefault(), text, initialFontSize, _textSpacing);
 
-            float exitButtonHeight = (buttonTextSize.Y + _vSpace) * exitButtonScaleFactor;
-            float exitButtonWidth = _buttonWidth * exitButtonScaleFactor;
+            float availableWidth = targetWidth - _hSpace; 
+            float availableHeight = targetHeight - _vSpace;
+            float widthRatio = availableWidth / textSize.X;
+            float heightRatio = availableHeight / textSize.Y;
+
+            float scaleFactor = Math.Min(widthRatio, heightRatio);
+
+            float scaledFontSize = Math.Clamp(initialFontSize * scaleFactor, 10, _fontSize);
+
+            textSize = Raylib.MeasureTextEx(Raylib.GetFontDefault(), text, scaledFontSize, _textSpacing);
+            
+            float width = textSize.X + _hSpace;
+            float height = textSize.Y + _vSpace;
 
             return new Button(
-                _instructionWindow.X + _instructionWindow.Width - _vSpace - exitButtonWidth,
-                _instructionWindow.Y + _hSpace+ _instructionScrollY,
-                exitButtonWidth,
-                exitButtonHeight,
+                _instructionWindow.X + _instructionWindow.Width - _vSpace - width,
+                _instructionWindow.Y + _hSpace + _instructionScrollY,
+                width,
+                height,
                 text,
-                _fontSize * exitButtonScaleFactor,
+                scaledFontSize,
                 _onExitAction
             );
+
+            // float exitButtonScaleFactor = 0.6f;
+            // string text = "Exit";
+
+            // Vector2 buttonTextSize = Raylib.MeasureTextEx(Raylib.GetFontDefault(), text, _fontSize * exitButtonScaleFactor, _textSpacing);
+
+            // float exitButtonHeight = (buttonTextSize.Y + _vSpace) * exitButtonScaleFactor;
+            // float exitButtonWidth = _buttonWidth * exitButtonScaleFactor;
+
+            // return new Button(
+            //     _instructionWindow.X + _instructionWindow.Width - _vSpace - exitButtonWidth,
+            //     _instructionWindow.Y + _hSpace+ _instructionScrollY,
+            //     exitButtonWidth,
+            //     exitButtonHeight,
+            //     text,
+            //     _fontSize * exitButtonScaleFactor,
+            //     _onExitAction
+            // );
         }
 
         private void ScrollBar(Vector2 mousePos) {

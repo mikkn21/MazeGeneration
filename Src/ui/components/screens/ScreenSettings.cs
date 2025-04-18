@@ -22,6 +22,12 @@ namespace MazeGen.ui.components.screens {
         private string _currentInputText = "";
         private Dictionary<string, string> _inputErrors = new Dictionary<string, string>();
 
+        private const int SCROLLSPEED = 20;
+        private bool _isDraggingScrollbar = false;
+        private float _scrollbarDragOffset = 0;
+        private float _instructionScrollY = 0;
+        private float _totalInstructionContentHeight = 0;
+
         MazeSettingsModel _settingsManager;
         
         // TODO: The fontsize on the "restart" button on the 4 mazelayout is not correct.
@@ -42,7 +48,7 @@ namespace MazeGen.ui.components.screens {
             _settingsManager = settingsManager;
             _selectedLayout = _settingsManager.Settings.Layout;
 
-            _vSpace = Math.Clamp(_settingsWindow.Width* 0.02f, 5, 30); 
+            _vSpace = Math.Clamp(_settingsWindow.Width* 0.02f, 5, 30);
             _hSpace = Math.Clamp(_settingsWindow.Height* 0.02f, 5, 30); 
             _fontSize = Math.Clamp(_settingsWindow.Width * 0.03f, 12, 30);    
 
@@ -63,7 +69,17 @@ namespace MazeGen.ui.components.screens {
             Raylib.DrawRectangleRec(_settingsWindow, transColor);
             Raylib.DrawRectangleLinesEx(_settingsWindow, 2, Color.Black);
 
-            float currentY = _settingsWindow.Y + _hSpace; //+ _instructionScrollY;
+            float wheel = Raylib.GetMouseWheelMove();
+            _instructionScrollY += wheel * SCROLLSPEED;
+
+            Raylib.BeginScissorMode(
+                (int)_settingsWindow.X,
+                (int)_settingsWindow.Y,
+                (int)_settingsWindow.Width,
+                (int)_settingsWindow.Height
+            );
+
+            float currentY = _settingsWindow.Y + _hSpace + _instructionScrollY;
             float startY = currentY;
 
             int titleFontSize = DrawTitleAndAdvance(ref currentY, "Settings", _settingsWindow.Width, true);
@@ -72,20 +88,24 @@ namespace MazeGen.ui.components.screens {
             currentY += DrawLayoutSection(currentY, mousePos, layoutFontSize) + _hSpace;
 
             int dimSectionFontSize = DrawTitleAndAdvance(ref currentY, "Dimensions:", titleFontSize);
-            currentY += DrawInputBoxForDimensions(currentY, mousePos, dimSectionFontSize, "X:", settings => settings.Width) + _hSpace;
-            currentY += DrawInputBoxForDimensions(currentY, mousePos, dimSectionFontSize, "Y:", settings => settings.Height) + _hSpace;
+            currentY += DrawInputBox(currentY, mousePos, dimSectionFontSize, "X:", settings => settings.Width, newValue => _settingsManager.UpdateSize(newValue, _settingsManager.Settings.Height)) + _hSpace;
+            currentY += DrawInputBox(currentY, mousePos, dimSectionFontSize, "Y:", settings => settings.Height, newValue => _settingsManager.UpdateSize(newValue, _settingsManager.Settings.Width)) + _hSpace;
+            int speedSectionFontSize = DrawTitleAndAdvance(ref currentY, "Animation Speed:", titleFontSize);
+            currentY += DrawInputBox(currentY, mousePos, speedSectionFontSize, "S:", settings => settings.FramesPerSecond, newValue => _settingsManager.UpdateFramesPerSecond(newValue)) + _hSpace;
 
-
-            // currentY += sectionTitleSize.Y + _hSpace;
-
-
-
-
-
-
+            currentY += _hSpace * 3; // Add some padding at the bottom
+           
+            // Static UI element
             Button exitButton = ExitButton();
             exitButton.Update(mousePos);
             exitButton.Draw();
+
+            _totalInstructionContentHeight = currentY - startY;
+            Raylib.EndScissorMode();
+
+
+            ScrollBar(mousePos);
+
 
         }
 
@@ -128,14 +148,13 @@ namespace MazeGen.ui.components.screens {
 
             return (textSize.Y, fontSize);
         }
-
-        private float DrawInputBoxForDimensions(float currentY, Vector2 mousePos, int scaleElement, string title, Func<MazeSettings, int> getDimensionValue) {
+        private float DrawInputBox(float currentY, Vector2 mousePos, int scaleElement, string title, Func<MazeSettings, int> getValue, Action<int> updateValue) {
             int fontSize = Math.Clamp((int)(scaleElement * 0.70f), 12, 50); 
             Vector2 titleSize = Raylib.MeasureTextEx(Raylib.GetFontDefault(), title, fontSize, _textSpacing);
 
-            Vector2 inputWidth4Chars = Raylib.MeasureTextEx(Raylib.GetFontDefault(), "9999", fontSize, _textSpacing);
+            Vector2 inputWidth3Chars = Raylib.MeasureTextEx(Raylib.GetFontDefault(), "999", fontSize, _textSpacing);
 
-            float inputBoxWidth = inputWidth4Chars.X * 1.1f; 
+            float inputBoxWidth = inputWidth3Chars.X * 1.1f; 
             float inputBoxHeight = titleSize.Y * 1.5f; 
 
             float labelY = currentY + (inputBoxHeight - titleSize.Y) / 2;
@@ -160,9 +179,7 @@ namespace MazeGen.ui.components.screens {
             
             bool isActive = _activeInputBox == title;
 
-            // Draw input box
-            // TODO: THINK MORE ABOUT THE COLOR SCHEME
-            Raylib.DrawRectangleRec(inputBox, isActive ? Color.White : Color.White);
+            Raylib.DrawRectangleRec(inputBox, Color.White);
             Raylib.DrawRectangleLinesEx(inputBox, 1, isActive ? Color.Green : Color.Black);
 
             string displayText; 
@@ -172,7 +189,10 @@ namespace MazeGen.ui.components.screens {
                 // Keyboard input
                 int key = Raylib.GetCharPressed();
                 while (key > 0) {
-                    if (char.IsDigit((char)key) && _currentInputText.Length < 4 ) {
+
+                    int maxChars = (title == "S:") ? 2 : 3; // speed is 2 digits, others are 3
+
+                    if (char.IsDigit((char)key) && _currentInputText.Length < maxChars ) {
                         _currentInputText += (char)key; 
                     }
                     key = Raylib.GetCharPressed();
@@ -185,16 +205,26 @@ namespace MazeGen.ui.components.screens {
                 // Enter key to submit 
                 if (Raylib.IsKeyPressed(KeyboardKey.Enter)) {
                     if (int.TryParse(_currentInputText, out int newValue)) {
-                        if (newValue < MazeSettings.MIN_DIMENSION || newValue > MazeSettings.MAX_DIMENSION) {
-                            _inputErrors[title] = $"Value must be between {MazeSettings.MIN_DIMENSION} and {MazeSettings.MAX_DIMENSION}";
+                        
+                        int minValue, maxValue; 
+
+                        if (title == "X:" || title == "Y:") {
+                            minValue = MazeSettings.MIN_DIMENSION;
+                            maxValue = MazeSettings.MAX_DIMENSION;
+                        } else if (title == "S:") {
+                            minValue = MazeSettings.MIN_FPS;
+                            maxValue = MazeSettings.MAX_FPS;
+                        } else { // default values 
+                            minValue = 1;
+                            maxValue = 60;
+                        }
+
+                        if (newValue < minValue || newValue > maxValue) {
+                            _inputErrors[title] = $"Value must be between {minValue} and {maxValue}";
                         } else {
                             _inputErrors.Remove(title);
-
-                            if (title == "X:") {
-                                _settingsManager.UpdateSize(newValue, _settingsManager.Settings.Height);
-                            } else if (title == "Y:") {
-                                _settingsManager.UpdateSize(_settingsManager.Settings.Width, newValue);
-                            }
+                            updateValue(newValue);
+ 
                         }
                     } else {
                         _inputErrors[title] = "Invalid input";
@@ -211,15 +241,15 @@ namespace MazeGen.ui.components.screens {
 
             } else {
                 // Show the current value (not editing)
-                displayText = getDimensionValue(_settingsManager.Settings).ToString();
-                displayText = displayText.Length <= 4
-                    ? displayText.PadLeft(4, '0')
-                    : displayText.Substring(0, 4);
+                displayText = getValue(_settingsManager.Settings).ToString();
+                displayText = displayText.Length <= 3
+                    ? displayText
+                    : displayText.Substring(0, 3);
             }
 
             Vector2 settingSize = Raylib.MeasureTextEx(Raylib.GetFontDefault(), displayText, fontSize, _textSpacing);
-            // Center text in input box on X and Y
-            float settingTextX = inputBox.X + (inputBox.Width - settingSize.X) / 2;
+            
+            float settingTextX = inputBox.X + _vSpace * 0.2f;
             float settingTextY = inputBox.Y + (inputBox.Height - settingSize.Y) / 2;
 
             Raylib.DrawTextEx(
@@ -258,7 +288,7 @@ namespace MazeGen.ui.components.screens {
             if (Raylib.CheckCollisionPointRec(mousePos, inputBox) && Raylib.IsMouseButtonPressed(MouseButton.Left)) {
                 Raylib.SetMouseCursor(MouseCursor.IBeam);
                 _activeInputBox = title;
-                _currentInputText = getDimensionValue(_settingsManager.Settings).ToString();
+                _currentInputText = getValue(_settingsManager.Settings).ToString();
                 
                 _inputErrors.Remove(title);
             }
@@ -329,7 +359,52 @@ namespace MazeGen.ui.components.screens {
             }
 
             return previewSize + labelHeight;
+        
+        }
+        private void ScrollBar(Vector2 mousePos) {
+            float maxScroll = Math.Max(0, _totalInstructionContentHeight - _settingsWindow.Height);
+            _instructionScrollY = Math.Clamp(_instructionScrollY, -maxScroll, 0);
 
+            if (_totalInstructionContentHeight > _settingsWindow.Height) {
+                float scrollbarWidth = 8;
+                float visibleRatio = _settingsWindow.Height / _totalInstructionContentHeight;
+                float scrollbarHeight = _settingsWindow.Height * visibleRatio;
+
+                float scrollProgress = -_instructionScrollY / maxScroll;
+                float scrollbarY = _settingsWindow.Y + (_settingsWindow.Height - scrollbarHeight) * scrollProgress;
+
+                Rectangle scrollbar = new Rectangle(
+                    _settingsWindow.X + _settingsWindow.Width - scrollbarWidth - 4,
+                    scrollbarY,
+                    scrollbarWidth,
+                    scrollbarHeight
+                );
+
+                if (Raylib.CheckCollisionPointRec(mousePos, scrollbar) && Raylib.IsMouseButtonPressed(MouseButton.Left)) {
+                    _isDraggingScrollbar = true;
+                    _scrollbarDragOffset = mousePos.Y - scrollbarY;
+                }
+
+                if (_isDraggingScrollbar) {
+                    if (Raylib.IsMouseButtonDown(MouseButton.Left)) {
+                        float newScrollbarY = mousePos.Y - _scrollbarDragOffset;
+                        float newScrollProgress = (newScrollbarY - _settingsWindow.Y) / (_settingsWindow.Height - scrollbarHeight);
+
+                        newScrollProgress = Math.Clamp(newScrollProgress, 0, 1);
+
+                        _instructionScrollY = -newScrollProgress * maxScroll;
+                    } else {
+                        _isDraggingScrollbar = false;
+                    }
+                }
+
+                Color scrollbarColor = _isDraggingScrollbar ?
+                    new Color(100, 100, 100, 220) :
+                    new Color(130, 130, 130, 180);
+
+
+                Raylib.DrawRectangleRec(scrollbar, scrollbarColor);
+            }
         }
 
         private Button ExitButton() { 
@@ -354,11 +429,9 @@ namespace MazeGen.ui.components.screens {
             float width = textSize.X + _hSpace;
             float height = textSize.Y + _vSpace;
             
-
             return new Button(
                 _settingsWindow.X + _settingsWindow.Width - _vSpace - width,
-                _settingsWindow.Y + _hSpace,
-                // _settingsWindow.Y + _hSpace + _instructionScrollY,
+                _settingsWindow.Y + _hSpace + _instructionScrollY,
                 width,
                 height,
                 text,
