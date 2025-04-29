@@ -3,18 +3,7 @@ using Raylib_cs;
 
 namespace MazeGen.ui.components.screens {
 
-    public class ScreenSettings : IScreen {
-
-        public bool IsInitialized { get; private set; } = false;
-        
-        private float _windowWidth;
-        private float _windowHeight;
-        private Action _onExitAction;
-        private Rectangle _settingsWindow;
-        private float _vSpace;
-        private float _hSpace;
-        private float _fontSize;
-        private readonly int _textSpacing = 2;
+    public class ScreenSettings : AbstractScreen{
 
         private MazeLayoutPreview? _previewManager; 
         private MazeLayout _selectedLayout;
@@ -22,67 +11,30 @@ namespace MazeGen.ui.components.screens {
         private string _currentInputText = "";
         private Dictionary<string, string> _inputErrors = new Dictionary<string, string>();
 
-        private const int SCROLLSPEED = 20;
-        private bool _isDraggingScrollbar = false;
-        private float _scrollbarDragOffset = 0;
-        private float _instructionScrollY = 0;
-        private float _totalInstructionContentHeight = 0;
-
         MazeSettingsModel _settingsManager;
         
         // TODO: The fontsize on the "restart" button on the 4 mazelayout is not correct.
         
-        public ScreenSettings(int parentWindowWidth, int parentWindowHeight, Action onExitAction, MazeSettingsModel settingsManager) {
-            _windowWidth = parentWindowWidth * 0.90f;
-            _windowHeight = parentWindowHeight * 0.90f;
-
-            _onExitAction = onExitAction;
-
-            _settingsWindow = new Rectangle(
-                (parentWindowWidth - _windowWidth) / 2,
-                (parentWindowHeight - _windowHeight) / 2,
-                _windowWidth,
-                _windowHeight
-            );
-
+        public ScreenSettings(int parentWindowWidth, int parentWindowHeight, Action onExitAction, MazeSettingsModel settingsManager) 
+            : base(parentWindowWidth, parentWindowHeight, onExitAction) {
             _settingsManager = settingsManager;
-            _selectedLayout = _settingsManager.Settings.Layout;
-
-            _vSpace = Math.Clamp(_settingsWindow.Width* 0.02f, 5, 30);
-            _hSpace = Math.Clamp(_settingsWindow.Height* 0.02f, 5, 30); 
-            _fontSize = Math.Clamp(_settingsWindow.Width * 0.03f, 12, 30);    
-
-        }
-
-        public void Initialize(){
+            } 
+      
+      
+        public override void Initialize(){
             IsInitialized = true;
-            _previewManager = new MazeLayoutPreview(150, 150);        
+            _previewManager = new MazeLayoutPreview(150, 150);
+            _selectedLayout = _settingsManager.Settings.Layout;    
         }
 
-        public void Draw(Vector2 mousePos) {
-            if (!IsInitialized) {
-                Initialize();
-            }
+        public override void Draw(Vector2 mousePos) {
+            base.Draw(mousePos);
+        } 
 
-            // Transparrent color for the window 
-            Color transColor = new Color(200, 200, 200, 240);
-            Raylib.DrawRectangleRec(_settingsWindow, transColor);
-            Raylib.DrawRectangleLinesEx(_settingsWindow, 2, Color.Black);
+        protected override float DrawContent(Vector2 mousePos, float currentY) {
+            
 
-            float wheel = Raylib.GetMouseWheelMove();
-            _instructionScrollY += wheel * SCROLLSPEED;
-
-            Raylib.BeginScissorMode(
-                (int)_settingsWindow.X,
-                (int)_settingsWindow.Y,
-                (int)_settingsWindow.Width,
-                (int)_settingsWindow.Height
-            );
-
-            float currentY = _settingsWindow.Y + _hSpace + _instructionScrollY;
-            float startY = currentY;
-
-            int titleFontSize = DrawTitleAndAdvance(ref currentY, "Settings", _settingsWindow.Width, true);
+            int titleFontSize = DrawTitleAndAdvance(ref currentY, "Settings", _screenWindow.Width, true);
     
             int layoutFontSize = DrawTitleAndAdvance(ref currentY, "Layout:", titleFontSize);
             currentY += DrawLayoutSection(currentY, mousePos, layoutFontSize) + _hSpace;
@@ -94,60 +46,9 @@ namespace MazeGen.ui.components.screens {
             currentY += DrawInputBox(currentY, mousePos, speedSectionFontSize, "S:", settings => settings.FramesPerSecond, newValue => _settingsManager.UpdateFramesPerSecond(newValue)) + _hSpace;
 
             currentY += _hSpace * 3; // Add some padding at the bottom
-           
-            // Static UI element
-            Button exitButton = ExitButton();
-            exitButton.Update(mousePos);
-            exitButton.Draw();
-
-            _totalInstructionContentHeight = currentY - startY;
-            Raylib.EndScissorMode();
-
-
-            ScrollBar(mousePos);
-
-
+            return currentY;
         }
 
-
-        // Helper method for drawing a title and advancing the currentY
-        // Returns the fontsize of the title used to scale other elements
-        private int DrawTitleAndAdvance(ref float currentY, string title, float scaleElement, bool isWindowTitle = false) {
-            var (height, fontSize) = DrawTitle(currentY, title, scaleElement, isWindowTitle);
-            currentY += height + _hSpace;
-            return fontSize; 
-        }
-
-
-        private (float height, int fontSize) DrawTitle(float currentY, string title, float scaleElement , bool isWindowTitle = false ) {
-            
-            int fontSize = isWindowTitle ? 
-                Math.Clamp((int)(scaleElement * 0.05f), 20, 70) : 
-                Math.Clamp((int)(scaleElement * 0.70), 12, 50);
-
-            Vector2 textSize = Raylib.MeasureTextEx(Raylib.GetFontDefault(), title, fontSize, _textSpacing);
-
-            
-            float textX = isWindowTitle ?
-                    _settingsWindow.X + (_settingsWindow.Width - textSize.X) / 2 :  // Center for window title
-                    _settingsWindow.X + _vSpace;
-
-            Raylib.DrawTextEx(
-                Raylib.GetFontDefault(),
-                title,
-                new Vector2(textX, currentY),
-                fontSize,
-                _textSpacing,
-                isWindowTitle ? Color.White : Color.Black
-            );
-            if (isWindowTitle) { // underline title
-                Vector2 startPos = new Vector2(textX, currentY + textSize.Y);
-                Vector2 endPos = new Vector2(textX + textSize.X, currentY + textSize.Y);
-                Raylib.DrawLineEx(startPos, endPos, 2, Color.Black);
-            }
-
-            return (textSize.Y, fontSize);
-        }
         private float DrawInputBox(float currentY, Vector2 mousePos, int scaleElement, string title, Func<MazeSettings, int> getValue, Action<int> updateValue) {
             int fontSize = Math.Clamp((int)(scaleElement * 0.70f), 12, 50); 
             Vector2 titleSize = Raylib.MeasureTextEx(Raylib.GetFontDefault(), title, fontSize, _textSpacing);
@@ -158,7 +59,7 @@ namespace MazeGen.ui.components.screens {
             float inputBoxHeight = titleSize.Y * 1.5f; 
 
             float labelY = currentY + (inputBoxHeight - titleSize.Y) / 2;
-            float labelX = _settingsWindow.X + _vSpace;
+            float labelX = _screenWindow.X + _vSpace;
             
             // Draw label
             Raylib.DrawTextEx(
@@ -312,7 +213,7 @@ namespace MazeGen.ui.components.screens {
             float labelHeight = Raylib.MeasureTextEx(Raylib.GetFontDefault(), "Sample", labelFontSize, _textSpacing).Y;
 
 
-            float availableWidth = _settingsWindow.Width - (2 * _vSpace);
+            float availableWidth = _screenWindow.Width - (2 * _vSpace);
         
             float totalPreviewsWidth = 4 * previewSize;
             float remainingSpace = availableWidth - totalPreviewsWidth;
@@ -321,7 +222,7 @@ namespace MazeGen.ui.components.screens {
             
             // Center the layout options
             float totalWidth = (4 * previewSize) + (3 * spacing);
-            float startX = _settingsWindow.X + _vSpace +  (_settingsWindow.Width - totalWidth) / 2;
+            float startX = _screenWindow.X + _vSpace +  (_screenWindow.Width - totalWidth) / 2;
             
             for (int i = 0; i < 4; i++) {
                 MazeLayout layout = (MazeLayout)i;
@@ -361,86 +262,8 @@ namespace MazeGen.ui.components.screens {
             return previewSize + labelHeight;
         
         }
-        private void ScrollBar(Vector2 mousePos) {
-            float maxScroll = Math.Max(0, _totalInstructionContentHeight - _settingsWindow.Height);
-            _instructionScrollY = Math.Clamp(_instructionScrollY, -maxScroll, 0);
-
-            if (_totalInstructionContentHeight > _settingsWindow.Height) {
-                float scrollbarWidth = 8;
-                float visibleRatio = _settingsWindow.Height / _totalInstructionContentHeight;
-                float scrollbarHeight = _settingsWindow.Height * visibleRatio;
-
-                float scrollProgress = -_instructionScrollY / maxScroll;
-                float scrollbarY = _settingsWindow.Y + (_settingsWindow.Height - scrollbarHeight) * scrollProgress;
-
-                Rectangle scrollbar = new Rectangle(
-                    _settingsWindow.X + _settingsWindow.Width - scrollbarWidth - 4,
-                    scrollbarY,
-                    scrollbarWidth,
-                    scrollbarHeight
-                );
-
-                if (Raylib.CheckCollisionPointRec(mousePos, scrollbar) && Raylib.IsMouseButtonPressed(MouseButton.Left)) {
-                    _isDraggingScrollbar = true;
-                    _scrollbarDragOffset = mousePos.Y - scrollbarY;
-                }
-
-                if (_isDraggingScrollbar) {
-                    if (Raylib.IsMouseButtonDown(MouseButton.Left)) {
-                        float newScrollbarY = mousePos.Y - _scrollbarDragOffset;
-                        float newScrollProgress = (newScrollbarY - _settingsWindow.Y) / (_settingsWindow.Height - scrollbarHeight);
-
-                        newScrollProgress = Math.Clamp(newScrollProgress, 0, 1);
-
-                        _instructionScrollY = -newScrollProgress * maxScroll;
-                    } else {
-                        _isDraggingScrollbar = false;
-                    }
-                }
-
-                Color scrollbarColor = _isDraggingScrollbar ?
-                    new Color(100, 100, 100, 220) :
-                    new Color(130, 130, 130, 180);
-
-
-                Raylib.DrawRectangleRec(scrollbar, scrollbarColor);
-            }
-        }
-
-        private Button ExitButton() { 
-            string text = "Exit";
-
-            float targetWidth = _settingsWindow.Width * 0.1f;
-            float targetHeight = _settingsWindow.Height * 0.08f;
-            float initialFontSize = _fontSize * 0.6f; 
-            Vector2 textSize = Raylib.MeasureTextEx(Raylib.GetFontDefault(), text, initialFontSize, _textSpacing);
-        
-            float availableWidth = targetWidth - _hSpace;
-            float availableHeight = targetHeight - _vSpace;
-            float widthRatio = availableWidth / textSize.X;
-            float heightRatio = availableHeight / textSize.Y;
-
-            float scaleFactor = Math.Min(widthRatio, heightRatio);
-
-            float scaledFontSize = Math.Clamp(initialFontSize * scaleFactor, 10, _fontSize);
-
-            textSize = Raylib.MeasureTextEx(Raylib.GetFontDefault(), text, scaledFontSize, _textSpacing);
-
-            float width = textSize.X + _hSpace;
-            float height = textSize.Y + _vSpace;
-            
-            return new Button(
-                _settingsWindow.X + _settingsWindow.Width - _vSpace - width,
-                _settingsWindow.Y + _hSpace + _instructionScrollY,
-                width,
-                height,
-                text,
-                scaledFontSize,
-                _onExitAction
-            );
-        }
-
-        public void Cleanup() {
+      
+        public override void Cleanup() {
             _previewManager?.Cleanup();
         }
 
