@@ -1,8 +1,5 @@
 
-using System.Formats.Tar;
 using System.Numerics;
-using System.Security.Cryptography.X509Certificates;
-using System.Threading.Tasks.Dataflow;
 using Raylib_cs;
 
 namespace MazeGen.ui.components {

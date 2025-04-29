@@ -18,6 +18,7 @@ namespace MazeGen.ui.components.screens {
 
         private MazeWindow[] _mazeWindows;
         private ControlPanel[] _controlPanels;
+        private AlgorithmSwitcher[] _algorithmSwitchers;
         private RenderTexture2D[] _renderTextures;
         private readonly int _windowWidth;
         private readonly int _windowHeight;
@@ -69,6 +70,7 @@ namespace MazeGen.ui.components.screens {
             };
             _mazeWindows = new MazeWindow[_mazeCount];
             _controlPanels = new ControlPanel[_mazeCount];
+            _algorithmSwitchers = new AlgorithmSwitcher[_mazeCount];
             _renderTextures = new RenderTexture2D[_mazeCount]; 
         
         }
@@ -91,6 +93,7 @@ namespace MazeGen.ui.components.screens {
 
             _mazeWindows = new MazeWindow[_mazeCount];
             _controlPanels = new ControlPanel[_mazeCount];
+            _algorithmSwitchers = new AlgorithmSwitcher[_mazeCount];
             _renderTextures = new RenderTexture2D[_mazeCount];
 
             IsInitialized = false; // Let the next Draw call reinitialize
@@ -104,12 +107,17 @@ namespace MazeGen.ui.components.screens {
             
             int smallestDim = Math.Min(_mazeWidth, _mazeHeight);
             int wallThickness = Math.Max(1, cellSize / smallestDim );
-        
+
+            int algorithmSwitcherHeight = (int)(_controlPanelHeight * 0.8f);
            
             for (int i = 0; i < _mazeCount; i++) {
                 Maze maze = new Maze (_mazeWidth, _mazeHeight); 
 
-                IGenerator generator = new Backtracking(maze);
+                IGenerator generator = _settingsManager.Settings.Alg switch {
+                    AlgorithmType.Backtracking => new Backtracking(maze),
+                    _ => new Backtracking(maze)
+                };
+                
                  
                 _mazeWindows[i] = new MazeWindow( 
                     maze,
@@ -120,6 +128,14 @@ namespace MazeGen.ui.components.screens {
                 );
 
                 _controlPanels[i] = new ControlPanel(_mazeWindows[i], _mazeWindows[i].Width, _controlPanelHeight);
+
+                _algorithmSwitchers[i] = new AlgorithmSwitcher(
+                    _mazeWindows[i],
+                    _controlPanels[i].Width,
+                    algorithmSwitcherHeight,
+                    _settingsManager
+                );
+
 
                 _renderTextures[i] = Raylib.LoadRenderTexture(
                     _mazeWindows[i].Width,
@@ -205,6 +221,14 @@ namespace MazeGen.ui.components.screens {
             Rectangle[] destRects = CalculateDestRects();
 
             for (int i = 0; i < _mazeWindows.Length; i++) {
+                _algorithmSwitchers[i].Position = new Vector2( 
+                    destRects[i].X,
+                    destRects[i].Y - _algorithmSwitchers[i].Height - 5 // 5 is padding between maze and algorithm switcher
+                );
+
+                _algorithmSwitchers[i].Update(mousePos);
+                _algorithmSwitchers[i].Draw();
+
                 Vector2 offset = new Vector2(destRects[i].X, destRects[i].Y);
                 Vector2 localMousePos = mousePos - offset;
 
@@ -247,8 +271,9 @@ namespace MazeGen.ui.components.screens {
             int mazeWidth = _mazeWindows[0].Width;
             int mazeHeight = _mazeWindows[0].Height;
             int controlHeight = _controlPanels[0].Height;
+            int switcherHeight = _algorithmSwitchers[0].Height;
 
-            int totalHeightPerMaze = mazeHeight + controlHeight;
+            int totalHeightPerMaze = mazeHeight + controlHeight + switcherHeight + 10; // +10 for padding between components
 
             if (CurrentLayout == MazeLayout.FourMazes || CurrentLayout == MazeLayout.ThreeMazes) {
                 // For a 2x2 grid layout:

@@ -29,17 +29,30 @@ public class MazeSettingsModel {
 
         // Update only the layout of the settings object.
         public void UpdateLayout(MazeLayout newLayout) {
-            Settings = new MazeSettings(newLayout, _settings.Width, _settings.Height, _settings.FramesPerSecond);
+            Settings = Settings with {
+                Layout = newLayout
+            };
         }
 
         // Update only the size of the settings object.
         public void UpdateSize(int newWidth, int newHeight) {
-            Settings = new MazeSettings(_settings.Layout, newWidth, newHeight, _settings.FramesPerSecond);
+            Settings = Settings with {
+                Width = newWidth,
+                Height = newHeight
+            };
         }
 
         // Update only the frames per second of the settings object.
         public void UpdateFramesPerSecond(int newFramesPerSecond) {
-            Settings = new MazeSettings(_settings.Layout, _settings.Width, _settings.Height, newFramesPerSecond);
+            Settings = Settings with {
+                FramesPerSecond = newFramesPerSecond
+            }; 
+        }
+
+        public void UpdateAlgorithm(AlgorithmType newAlgorithm) {
+            Settings = Settings with {
+                Alg = newAlgorithm
+            };
         }
 
 

@@ -1,8 +1,6 @@
-using System;
 using System.Numerics;
 using MazeGen.Algorithms;
 using MazeGen.maze;
-using MazeGen.maze.wall;
 using MazeGen.ui.components.screens;
 using Raylib_cs;
 
