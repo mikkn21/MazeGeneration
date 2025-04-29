@@ -36,8 +36,32 @@ namespace MazeGen.ui.components {
             _buttonHeight = Height * 0.8f;
             _buttonWidth = Height; // Square button 
 
+            FontSize = CalculateOptimalFontSize(); 
+
             (_leftButton, _rightButton) = InitButtons();
             
+        }
+
+        private float CalculateOptimalFontSize() {
+            string longestName = ""; 
+            foreach(string name in _algorithmNames) {
+                if (name.Length > longestName.Length) {
+                    longestName = name;
+                }
+            }
+            
+            float availableWidth = Width - (_buttonWidth * 2) - (Width * 0.2f); // 10% padding each side
+    
+            float testFontSize = Height * 0.6f;
+    
+    
+            Vector2 textSize;
+            do {
+                testFontSize -= 1.0f;
+                textSize = Raylib.MeasureTextEx(Raylib.GetFontDefault(), longestName, testFontSize, _textSpacing);
+            } while (textSize.X > availableWidth && testFontSize > 8); // Don't go smaller than 8px
+    
+            return Math.Clamp(testFontSize, Height * 0.3f, Height * 0.6f);
         }
 
         private (Button left, Button right) InitButtons() {
@@ -97,6 +121,12 @@ namespace MazeGen.ui.components {
         }
 
         private void DrawAlgTitle() {
+            int algIndex = (int)_settingsManager.Settings.Alg;
+            if (algIndex < 0 || algIndex >= _algorithmNames.Length) {
+                algIndex = 0; 
+            }
+
+
             string currentAlgorithm = _algorithmNames[(int)_settingsManager.Settings.Alg];
             Vector2 textSize = Raylib.MeasureTextEx(Raylib.GetFontDefault(), currentAlgorithm, FontSize, _textSpacing);
             
